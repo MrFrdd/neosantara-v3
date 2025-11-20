@@ -43,7 +43,7 @@ class _LoginPageState extends State<LoginPage> {
   // === Fungsi Validasi Semua Field ===
   void _handleSubmit() {
     // Pastikan tidak ada aksi ganda saat API dipanggil
-    if (!mounted) return; 
+    if (!mounted) return;
 
     setState(() {
       // Basic validation: check if fields are empty
@@ -79,7 +79,9 @@ class _LoginPageState extends State<LoginPage> {
     // Simulasi sukses:
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Berhasil ${isLogin ? "Masuk" : "Mendaftar"}! (Simulasi)'),
+        content: Text(
+          'Berhasil ${isLogin ? "Masuk" : "Mendaftar"}! (Simulasi)',
+        ),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 2),
       ),
@@ -166,9 +168,7 @@ class _LoginPageState extends State<LoginPage> {
             onTap: widget.onClose, // Tutup modal saat mengklik di luar
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-              child: Container(
-                color: Colors.black.withOpacity(0.4),
-              ),
+              child: Container(color: Colors.black.withOpacity(0.4)),
             ),
           ),
         ),
@@ -177,146 +177,154 @@ class _LoginPageState extends State<LoginPage> {
         Center(
           child: CallbackShortcuts(
             // Menggunakan 'bindings' untuk CallbackShortcuts
-            bindings: shortcuts, 
-            child: Focus( // Memastikan widget ini dapat menerima input fokus keyboard
+            bindings: shortcuts,
+            child: Focus(
+              // Memastikan widget ini dapat menerima input fokus keyboard
               autofocus: true, // Fokus otomatis saat modal muncul
               child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(vertical: 40.0), // Padding untuk SingleChildScrollView
-                  child: Container(
-                    width: screenWidth * 0.85,
-                    constraints: const BoxConstraints(maxWidth: 380),
-                    padding: const EdgeInsets.all(22),
-                    margin: const EdgeInsets.all(20), 
-                    decoration: BoxDecoration(
-                      // Warna background modal
-                      color: Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 40.0,
+                ), // Padding untuk SingleChildScrollView
+                child: Container(
+                  width: screenWidth * 0.85,
+                  constraints: const BoxConstraints(maxWidth: 380),
+                  padding: const EdgeInsets.all(22),
+                  margin: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    // Warna background modal
+                    color: Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // === JUDUL ===
+                      Text(
+                        isLogin ? 'Masuk ke NeoSantara' : 'Daftar Akun Baru',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Nusantara',
+                          color: Colors.black87,
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // === JUDUL ===
-                        Text(
-                          isLogin ? 'Masuk ke NeoSantara' : 'Daftar Akun Baru',
-                          textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 18),
+
+                      // === FIELD EMAIL ===
+                      _buildTextField(
+                        controller: _emailController,
+                        labelText: 'Email',
+                        isError: _emailError,
+                        textInputAction: TextInputAction.next,
+                      ),
+
+                      // === FIELD NAMA (JIKA DAFTAR) ===
+                      _buildTextField(
+                        controller: _namaController,
+                        labelText: 'Nama Lengkap',
+                        isError: _namaError,
+                        textInputAction: TextInputAction.next,
+                        isVisible: !isLogin,
+                      ),
+
+                      // === FIELD PASSWORD ===
+                      _buildTextField(
+                        controller: _passwordController,
+                        labelText: 'Kata Sandi',
+                        isError: _passwordError,
+                        textInputAction: TextInputAction.done,
+                        isPassword: true,
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // === TOMBOL LOGIN / DAFTAR ===
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber[700],
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: _handleSubmit,
+                        child: Text(
+                          isLogin ? 'MASUK' : 'DAFTAR',
                           style: const TextStyle(
-                            fontSize: 24, 
-                            fontWeight: FontWeight.bold,
                             fontFamily: 'Nusantara',
-                            color: Colors.black87,
+                            fontSize: 18,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 18),
+                      ),
 
-                        // === FIELD EMAIL ===
-                        _buildTextField(
-                          controller: _emailController,
-                          labelText: 'Email',
-                          isError: _emailError,
-                          textInputAction: TextInputAction.next,
-                        ),
+                      const SizedBox(height: 15),
 
-                        // === FIELD NAMA (JIKA DAFTAR) ===
-                        _buildTextField(
-                          controller: _namaController,
-                          labelText: 'Nama Lengkap',
-                          isError: _namaError,
-                          textInputAction: TextInputAction.next,
-                          isVisible: !isLogin,
-                        ),
-
-                        // === FIELD PASSWORD ===
-                        _buildTextField(
-                          controller: _passwordController,
-                          labelText: 'Kata Sandi',
-                          isError: _passwordError,
-                          textInputAction: TextInputAction.done,
-                          isPassword: true,
-                        ),
-
-                        const SizedBox(height: 8),
-                        
-                        // === TOMBOL LOGIN / DAFTAR ===
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.amber[700],
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          onPressed: _handleSubmit,
-                          child: Text(
-                            isLogin ? 'MASUK' : 'DAFTAR',
+                      // === TOGGLE LOGIN / DAFTAR ===
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        children: [
+                          Text(
+                            isLogin
+                                ? 'Belum punya akun? '
+                                : 'Sudah punya akun? ',
                             style: const TextStyle(
+                              color: Colors.black87,
                               fontFamily: 'Nusantara',
-                              fontSize: 18,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
                             ),
                           ),
-                        ),
-                        
-                        const SizedBox(height: 15),
-                        
-                        // === TOGGLE LOGIN / DAFTAR ===
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          children: [
-                            Text(
-                              isLogin
-                                  ? 'Belum punya akun? '
-                                  : 'Sudah punya akun? ',
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                // Reset state saat toggle
+                                _emailController.clear();
+                                _namaController.clear();
+                                _passwordController.clear();
+                                isLogin = !isLogin;
+                                _emailError = _passwordError = _namaError =
+                                    false;
+                              });
+                            },
+                            child: Text(
+                              isLogin ? 'Daftar sekarang' : 'Masuk di sini',
                               style: const TextStyle(
-                                color: Colors.black87,
+                                color: Colors.blueAccent,
                                 fontFamily: 'Nusantara',
                                 fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
                               ),
                             ),
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  // Reset state saat toggle
-                                  _emailController.clear();
-                                  _namaController.clear();
-                                  _passwordController.clear();
-                                  isLogin = !isLogin;
-                                  _emailError = _passwordError = _namaError = false;
-                                });
-                              },
-                              child: Text(
-                                isLogin ? 'Daftar sekarang' : 'Masuk di sini',
-                                style: const TextStyle(
-                                  color: Colors.blueAccent,
-                                  fontFamily: 'Nusantara',
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      ),
 
-                        const SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
-                        // === TOMBOL CLOSE ===
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.redAccent, size: 28),
-                          onPressed: widget.onClose,
+                      // === TOMBOL CLOSE ===
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.redAccent,
+                          size: 28,
                         ),
-                      ],
-                    ),
+                        onPressed: widget.onClose,
+                      ),
+                    ],
                   ),
                 ),
+              ),
             ),
           ),
         ),

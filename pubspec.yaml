@@ -69,6 +69,11 @@ flutter:
       - assets/images/jabar2.png
       - assets/images/balidulu.jpg
       - assets/images/bali2.jpg
+      - assets/images/logo.png
+      - assets/images/stiker.jpg
+      - assets/images/totebag.jpg
+      - assets/images/batik_noder.jpg
+      - assets/images/gantungan_bali.jpg
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

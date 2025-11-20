@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:project_uas_budayaindonesia/pages/merchandise_page.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/sejarah_dropdown.dart';
 // Import file pages yang sudah Anda buat di langkah perbaikan
-import '../pages/login_page.dart'; 
+import '../pages/login_page.dart';
 import '../pages/jakarta_page.dart';
-import '../pages/jawa_timur_page.dart'; 
+import '../pages/jawa_timur_page.dart';
 import '../pages/jawa_tengah_page.dart';
-import '../pages/jawa_barat_page.dart'; 
-import '../pages/bali_page.dart'; 
-import '../pages/profil_page.dart'; 
+import '../pages/jawa_barat_page.dart';
+import '../pages/bali_page.dart';
+import '../pages/profil_page.dart';
+import '../pages/card_page.dart';
+import '../pages/merchandise_page.dart';
+import '../pages/payment_card.dart';
 
 class IntroPage extends StatefulWidget {
   const IntroPage({super.key});
@@ -27,51 +31,59 @@ class _IntroPageState extends State<IntroPage> {
     "Jawa Barat",
     "Bali",
   ];
-  
+
   // === FUNGSI NAVIGASI SEJARAH DAERAH ===
   void _navigateToRegion(String region) {
     // Tutup Drawer jika terbuka (penting untuk mobile)
     if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
       Navigator.pop(context);
     }
-    
+
     // Navigasi ke halaman spesifik
     if (region == "Jakarta") {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const JakartaPage()),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => const JakartaPage()));
     } else if (region == "Jawa Timur") {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const JawaTimurPage()),
-      );
-    }
-    else if (region == "Jawa Tengah") {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const JawaTengahPage()),
-      );
-    }
-    else if (region == "Jawa Barat") {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const JawaBaratPage()),
-      );
-    }
-    else if (region == "Bali") {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const BaliPage()),
-      );
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => const JawaTimurPage()));
+    } else if (region == "Jawa Tengah") {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => const JawaTengahPage()));
+    } else if (region == "Jawa Barat") {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => const JawaBaratPage()));
+    } else if (region == "Bali") {
+      Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (context) => const BaliPage()));
     }
   }
 
   // === FUNGSI NAVIGASI PROFIL ===
   void _navigateToProfile() {
-      // Tutup Drawer jika terbuka (penting untuk mobile)
-      if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
-        Navigator.pop(context);
-      }
-      
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (context) => const ProfilPage()), 
-      );
+    // Tutup Drawer jika terbuka (penting untuk mobile)
+    if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
+      Navigator.pop(context);
+    }
+
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const ProfilPage()));
+  }
+
+  void _navigateToMerchandise() {
+    if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
+      Navigator.pop(context);
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const MerchandisePage()),
+    );
   }
 
   // === Kotak utama budaya Indonesia ===
@@ -87,19 +99,25 @@ class _IntroPageState extends State<IntroPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: isMobile ? MainAxisAlignment.start : MainAxisAlignment.center,
+        mainAxisAlignment: isMobile
+            ? MainAxisAlignment.start
+            : MainAxisAlignment.center,
         children: [
           Text(
             'Keanekaragaman Budaya Indonesia',
             style: TextStyle(
               fontFamily: 'Nusantara',
               color: Colors.amber,
-              fontSize: isMobile ? 20 : 22, 
+              fontSize: isMobile ? 20 : 22,
               fontWeight: FontWeight.bold,
               letterSpacing: 1.2,
               height: 1.3,
               shadows: const [
-                Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(2, 2)),
+                Shadow(
+                  color: Colors.black54,
+                  blurRadius: 4,
+                  offset: Offset(2, 2),
+                ),
               ],
             ),
           ),
@@ -112,7 +130,7 @@ class _IntroPageState extends State<IntroPage> {
             style: TextStyle(
               fontFamily: 'Nusantara',
               color: Colors.white,
-              fontSize: isMobile ? 17 : 17, 
+              fontSize: isMobile ? 17 : 17,
               height: 1.6,
             ),
           ),
@@ -125,7 +143,7 @@ class _IntroPageState extends State<IntroPage> {
             style: TextStyle(
               fontFamily: 'Nusantara',
               color: Colors.white,
-              fontSize: isMobile ? 17 : 18, 
+              fontSize: isMobile ? 17 : 18,
               height: 1.6,
             ),
           ),
@@ -140,17 +158,17 @@ class _IntroPageState extends State<IntroPage> {
       {
         'text': 'Ayo kenali dan lestarikan budaya Indonesia bersama kami!',
         'icon': Icons.favorite,
-        'color': Colors.orangeAccent
+        'color': Colors.orangeAccent,
       },
       {
         'text': 'Belajar budaya, cintai Indonesia!',
         'icon': Icons.school,
-        'color': Colors.amber
+        'color': Colors.amber,
       },
       {
         'text': 'Mulai perjalananmu menjelajahi budaya Nusantara!',
         'icon': Icons.explore,
-        'color': Colors.deepOrangeAccent
+        'color': Colors.deepOrangeAccent,
       },
     ];
 
@@ -159,13 +177,15 @@ class _IntroPageState extends State<IntroPage> {
       children: slogans.map((item) {
         return Container(
           width: isMobile ? double.infinity : null,
-          margin: EdgeInsets.only(bottom: isMobile ? 6 : 18), 
+          margin: EdgeInsets.only(bottom: isMobile ? 6 : 18),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
             color: Colors.black.withOpacity(0.55),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-                color: (item['color'] as Color).withOpacity(0.6), width: 1),
+              color: (item['color'] as Color).withOpacity(0.6),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
                 color: (item['color'] as Color).withOpacity(0.25),
@@ -176,8 +196,11 @@ class _IntroPageState extends State<IntroPage> {
           ),
           child: Row(
             children: [
-              Icon(item['icon'] as IconData,
-                  color: item['color'] as Color, size: isMobile ? 28 : 32),
+              Icon(
+                item['icon'] as IconData,
+                color: item['color'] as Color,
+                size: isMobile ? 28 : 32,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -185,7 +208,7 @@ class _IntroPageState extends State<IntroPage> {
                   style: TextStyle(
                     fontFamily: 'Nusantara',
                     color: Colors.white,
-                    fontSize: isMobile ? 15 : 20, 
+                    fontSize: isMobile ? 15 : 20,
                     height: 1.4,
                   ),
                 ),
@@ -200,82 +223,128 @@ class _IntroPageState extends State<IntroPage> {
   // === Footer Section (Tentang Pembuat) ===
   Widget _footerSection(bool isMobile) {
     final double horizontalPadding = 16;
-    final double webContentMaxWidth = 1200; 
-    final double topSpacing = isMobile ? 0 : 10; 
-    
+    final double webContentMaxWidth = 1200;
+    final double topSpacing = isMobile ? 0 : 10;
+
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: horizontalPadding), 
-      color: Colors.transparent, 
+      padding: EdgeInsets.symmetric(
+        vertical: 10,
+        horizontal: horizontalPadding,
+      ),
+      color: Colors.transparent,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           SizedBox(height: topSpacing),
 
           Divider(
-            color: isMobile ? Colors.white70 : Colors.white54, 
-            thickness: isMobile ? 1.0 : 0.5, 
-            height: isMobile ? 16 : 35, 
-          ), 
-          
+            color: isMobile ? Colors.white70 : Colors.white54,
+            thickness: isMobile ? 1.0 : 0.5,
+            height: isMobile ? 16 : 35,
+          ),
+
           if (!isMobile)
             SizedBox(
-              width: webContentMaxWidth, 
+              width: webContentMaxWidth,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text('Tentang Pembuat',
-                      style: TextStyle(
-                          fontFamily: 'Nusantara',
-                          fontSize: 14, 
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFFFFD700))),
+                  Text(
+                    'Tentang Pembuat',
+                    style: TextStyle(
+                      fontFamily: 'Nusantara',
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFFFD700),
+                    ),
+                  ),
                   const SizedBox(height: 6),
-                  Text('Dibuat oleh: Frida Debugging',
-                      style: TextStyle(
-                          fontFamily: 'Nusantara',
-                          color: Colors.white,
-                          fontSize: 12)),
+                  Text(
+                    'Dibuat oleh: Frida Debugging',
+                    style: TextStyle(
+                      fontFamily: 'Nusantara',
+                      color: Colors.white,
+                      fontSize: 12,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text('Kontak: neosantara@idn.com',
-                      style: TextStyle(
-                          fontFamily: 'Nusantara',
-                          color: Colors.white70,
-                          fontSize: 12)),
+                  Text(
+                    'Kontak: neosantara@idn.com',
+                    style: TextStyle(
+                      fontFamily: 'Nusantara',
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text('Alamat: UNPAM VIKTOR',
-                      style: TextStyle(
-                          fontFamily: 'Nusantara',
-                          color: Colors.white54,
-                          fontSize: 12)),
+                  Text(
+                    'Alamat: UNPAM VIKTOR',
+                    style: TextStyle(
+                      fontFamily: 'Nusantara',
+                      color: Colors.white54,
+                      fontSize: 12,
+                    ),
+                  ),
                 ],
               ),
             ),
-          
+
           if (isMobile)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                    Text('Tentang Pembuat', style: TextStyle(fontFamily: 'Nusantara', fontSize: 14, fontWeight: FontWeight.bold, color: const Color(0xFFFFD700))),
-                    const SizedBox(height: 6),
-                    Text('Dibuat oleh: Frida Debugging', style: TextStyle(fontFamily: 'Nusantara', color: Colors.white, fontSize: 13)),
-                    const SizedBox(height: 4),
-                    Text('Kontak: neosantara@idn.com', style: TextStyle(fontFamily: 'Nusantara', color: Colors.white70, fontSize: 12)),
-                    const SizedBox(height: 4),
-                    Text('Alamat: UNPAM VIKTOR', style: TextStyle(fontFamily: 'Nusantara', color: Colors.white54, fontSize: 12)),
-                ],
-              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Tentang Pembuat',
+                  style: TextStyle(
+                    fontFamily: 'Nusantara',
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFFFD700),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Dibuat oleh: Frida Debugging',
+                  style: TextStyle(
+                    fontFamily: 'Nusantara',
+                    color: Colors.white,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Kontak: neosantara@idn.com',
+                  style: TextStyle(
+                    fontFamily: 'Nusantara',
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Alamat: UNPAM VIKTOR',
+                  style: TextStyle(
+                    fontFamily: 'Nusantara',
+                    color: Colors.white54,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
 
           const SizedBox(height: 12),
           const Divider(color: Colors.white24, thickness: 0.8),
           const SizedBox(height: 6),
-          Text('© 2025 NeoSantara • Melestarikan Warisan Budaya Bangsa',
-              style: TextStyle(
-                fontFamily: 'Nusantara',
-                color: Colors.white54,
-                fontSize: isMobile ? 11 : 13,
-                fontStyle: FontStyle.italic,
-              )),
+          Text(
+            '© 2025 NeoSantara • Melestarikan Warisan Budaya Bangsa',
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              color: Colors.white54,
+              fontSize: isMobile ? 11 : 13,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
         ],
       ),
     );
@@ -285,32 +354,35 @@ class _IntroPageState extends State<IntroPage> {
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
     final bool isMobile = screenSize.width < 600;
-    
-    final double? heroHeight = isMobile ? null : 650; 
-    final double minMobileHeight = screenSize.height - (kToolbarHeight + MediaQuery.of(context).padding.top);
 
+    final double? heroHeight = isMobile ? null : 650;
+    final double minMobileHeight =
+        screenSize.height -
+        (kToolbarHeight + MediaQuery.of(context).padding.top);
 
     return Scaffold(
-      backgroundColor: Colors.black, 
+      backgroundColor: Colors.black,
       // PENTING: Untuk membuat AppBar transparan di Web
-      extendBodyBehindAppBar: !isMobile, 
-      
-      resizeToAvoidBottomInset: true, 
+      extendBodyBehindAppBar: !isMobile,
+
+      resizeToAvoidBottomInset: true,
 
       // === DRAWER (untuk mobile) ===
       drawer: isMobile
           ? Drawer(
               backgroundColor: Colors.black87,
               child: SafeArea(
-                child: Column( 
+                child: Column(
                   children: [
-                    Expanded( 
+                    Expanded(
                       child: ListView(
                         padding: EdgeInsets.zero,
                         children: [
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             child: Row(
                               children: [
                                 ClipRRect(
@@ -340,43 +412,51 @@ class _IntroPageState extends State<IntroPage> {
                           // MENU HOME (MOBILE)
                           MenuButton(
                             text: "Home",
-                            isDrawer: true, 
+                            isDrawer: true,
                             onPressed: () {
-                              Navigator.pop(context); 
+                              Navigator.pop(context);
                             },
                           ),
-                          
-                          // Menu Sejarah Daerah (MOBILE)
-                          SejarahDropdown(
-                              regions: _regions,
-                              onSelected: (region) {
-                                // SejarahDropdown sudah memanggil Navigator.pop(context) di _selectItem
-                                _navigateToRegion(region);
-                              }
+
+                          MenuButton(
+                            text: "Merchandise",
+                            isDrawer: true,
+                            onPressed: _navigateToMerchandise,
                           ),
 
-                          const Divider(color: Colors.white24, thickness: 0.8), 
+                          // Menu Sejarah Daerah (MOBILE)
+                          SejarahDropdown(
+                            regions: _regions,
+                            onSelected: (region) {
+                              // SejarahDropdown sudah memanggil Navigator.pop(context) di _selectItem
+                              _navigateToRegion(region);
+                            },
+                          ),
+
+                          const Divider(color: Colors.white24, thickness: 0.8),
 
                           // MENU LOGIN (MOBILE)
                           MenuButton(
-                              text: "Login",
-                              isDrawer: true, 
-                              onPressed: () {
-                                Navigator.pop(context); 
-                                setState(() {
-                                  showLogin = true;
-                                });
-                              }),
-                          
+                            text: "Login",
+                            isDrawer: true,
+                            onPressed: () {
+                              Navigator.pop(context);
+                              setState(() {
+                                showLogin = true;
+                              });
+                            },
+                          ),
+
                           // MENU PROFIL BARU (MOBILE)
                           MenuButton(
-                              text: "Profil",
-                              isDrawer: true, 
-                              onPressed: _navigateToProfile),
+                            text: "Profil",
+                            isDrawer: true,
+                            onPressed: _navigateToProfile,
+                          ),
                         ],
                       ),
                     ),
-                    
+
                     // FOOTER
                     _footerSection(isMobile),
                   ],
@@ -388,17 +468,14 @@ class _IntroPageState extends State<IntroPage> {
       // === APPBAR ===
       appBar: AppBar(
         // Menghilangkan tombol back/menu otomatis
-        automaticallyImplyLeading: false, 
+        automaticallyImplyLeading: false,
 
         // Latar Belakang Transparan di Web, Hitam di Mobile
-        backgroundColor: isMobile ? Colors.black : Colors.transparent, 
-        elevation: isMobile ? 4 : 0, 
-        
-        iconTheme: const IconThemeData(
-          color: Colors.white,
-          size: 30, 
-        ),
-        
+        backgroundColor: isMobile ? Colors.black : Colors.transparent,
+        elevation: isMobile ? 4 : 0,
+
+        iconTheme: const IconThemeData(color: Colors.white, size: 30),
+
         // --- LEADING BARU (Menggantikan Tombol Back/Drawer) ---
         leading: isMobile
             ? IconButton(
@@ -408,32 +485,32 @@ class _IntroPageState extends State<IntroPage> {
                   if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
                     Navigator.pop(context);
                   }
-                  // Karena ini adalah IntroPage, navigasi ke "Home" adalah pop ke root. 
+                  // Karena ini adalah IntroPage, navigasi ke "Home" adalah pop ke root.
                   // Jika ini bukan root, Anda perlu: Navigator.of(context).popUntil((route) => route.isFirst);
                   // Di kasus ini, karena Anda di IntroPage (root), tidak perlu aksi pop.
-                  // JIKA ADA MAKSUD UNTUK MEMBUKA DRAWER DI SINI: ganti logika ini 
+                  // JIKA ADA MAKSUD UNTUK MEMBUKA DRAWER DI SINI: ganti logika ini
                   // dengan Scaffold.of(context).openDrawer();
-                  
+
                   // Karena Anda ingin fungsinya menjadi "Home", jika tombol back
-                  // muncul (artinya ada halaman sebelumnya), maka pop. Jika tombol 
+                  // muncul (artinya ada halaman sebelumnya), maka pop. Jika tombol
                   // drawer muncul (di root), maka tidak perlu aksi (kecuali membuka drawer).
-                  
+
                   // Untuk kasus IntroPage ini (asumsi ini adalah root):
                   Scaffold.of(context).openDrawer();
                 },
                 tooltip: "Menu", // Tetap berfungsi sebagai menu
               )
             : null,
-        // --- AKHIR LEADING BARU ---
 
+        // --- AKHIR LEADING BARU ---
         titleSpacing: 0,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            // Jika bukan mobile, kita ingin ada sedikit padding 
+            // Jika bukan mobile, kita ingin ada sedikit padding
             // di sebelah kiri logo (karena leading: null)
             if (!isMobile) const SizedBox(width: 20),
-            
+
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: Image.asset(
@@ -454,38 +531,46 @@ class _IntroPageState extends State<IntroPage> {
                 letterSpacing: 1.1,
               ),
             ),
-            
+
             // Spacer di kiri (Opsional, untuk menengahkan)
-            if (!isMobile) const Spacer(), 
+            if (!isMobile) const Spacer(),
 
             // --- BAGIAN NAVIGASI UTAMA (WEB) ---
             if (!isMobile)
               Row(
                 children: [
                   // MENU HOME (WEB)
+                  MenuButton(text: "Home", onPressed: () {}),
+
+                  // MENU MERCHANDISE (WEB)
                   MenuButton(
-                    text: "Home",
-                    onPressed: () {}, // Tidak perlu navigasi
+                    text: "Merchandise",
+                    onPressed: _navigateToMerchandise,
                   ),
+
                   // Menu Sejarah Daerah (WEB)
                   SejarahDropdown(
-                      regions: _regions,
-                      onSelected: _navigateToRegion // Panggil fungsi navigasi
+                    regions: _regions,
+                    onSelected: _navigateToRegion,
                   ),
                 ],
               ),
-            
+
             // Spacer di tengah untuk memisahkan navigasi utama dan aksi user
             const Spacer(),
-            
+
             // --- BAGIAN AKSI/USER (WEB) ---
             if (!isMobile)
               Row(
                 children: [
                   // 1. ICON PROFIL BARU
                   IconButton(
-                    icon: const Icon(Icons.person, color: Colors.white, size: 26),
-                    onPressed: _navigateToProfile, 
+                    icon: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                    onPressed: _navigateToProfile,
                     tooltip: "Profil User",
                   ),
 
@@ -514,10 +599,10 @@ class _IntroPageState extends State<IntroPage> {
                 // Hero Section
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    return Container( 
-                      height: isMobile ? null : heroHeight, 
+                    return Container(
+                      height: isMobile ? null : heroHeight,
                       constraints: isMobile
-                          ? BoxConstraints(minHeight: minMobileHeight) 
+                          ? BoxConstraints(minHeight: minMobileHeight)
                           : null,
                       width: double.infinity,
                       child: Stack(
@@ -526,11 +611,13 @@ class _IntroPageState extends State<IntroPage> {
                           Container(
                             height: isMobile ? null : constraints.maxHeight,
                             constraints: isMobile
-                                ? BoxConstraints(minHeight: minMobileHeight) 
+                                ? BoxConstraints(minHeight: minMobileHeight)
                                 : null,
                             decoration: const BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage('assets/images/tari-bali.jpg'), // ASUMSI: Gambar ini ada
+                                image: AssetImage(
+                                  'assets/images/tari-bali.jpg',
+                                ), // ASUMSI: Gambar ini ada
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -538,41 +625,46 @@ class _IntroPageState extends State<IntroPage> {
                           Container(
                             height: isMobile ? null : constraints.maxHeight,
                             constraints: isMobile
-                                ? BoxConstraints(minHeight: minMobileHeight) 
+                                ? BoxConstraints(minHeight: minMobileHeight)
                                 : null,
                             color: Colors.black.withOpacity(0.45),
                           ),
-                          
+
                           // KONTEN UTAMA DI PUSAT (Bottom Alignment)
                           Align(
-                            alignment: isMobile ? Alignment.bottomCenter : Alignment.center, 
+                            alignment: isMobile
+                                ? Alignment.bottomCenter
+                                : Alignment.center,
                             child: Padding(
                               padding: EdgeInsets.symmetric(
-                                  horizontal: isMobile ? 18 : 40, vertical: isMobile ? 8 : 20),
+                                horizontal: isMobile ? 18 : 40,
+                                vertical: isMobile ? 8 : 20,
+                              ),
                               child: isMobile
                                   ? Column(
-                                          mainAxisSize: MainAxisSize.min, 
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            _mainCultureBox(isMobile),
-                                            const SizedBox(height: 10), 
-                                            _sloganCards(isMobile),
-                                            const SizedBox(height: 8), 
-                                          ],
-                                        )
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        _mainCultureBox(isMobile),
+                                        const SizedBox(height: 10),
+                                        _sloganCards(isMobile),
+                                        const SizedBox(height: 8),
+                                      ],
+                                    )
                                   : Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          crossAxisAlignment: CrossAxisAlignment.center,
-                                          children: [
-                                            Expanded(
-                                              child: _mainCultureBox(isMobile),
-                                            ),
-                                            const SizedBox(width: 25), 
-                                            Flexible( 
-                                              child: _sloganCards(isMobile),
-                                            ),
-                                          ],
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                        Expanded(
+                                          child: _mainCultureBox(isMobile),
                                         ),
+                                        const SizedBox(width: 25),
+                                        Flexible(child: _sloganCards(isMobile)),
+                                      ],
+                                    ),
                             ),
                           ),
                         ],
@@ -580,17 +672,16 @@ class _IntroPageState extends State<IntroPage> {
                     );
                   },
                 ),
-                
+
                 // FOOTER UNTUK WEB BROWSER
-                if (!isMobile)
-                  _footerSection(isMobile),
+                if (!isMobile) _footerSection(isMobile),
               ],
             ),
           ),
 
           // === LOGIN OVERLAY ===
           if (showLogin)
-            LoginPage( 
+            LoginPage(
               onClose: () {
                 setState(() {
                   showLogin = false;

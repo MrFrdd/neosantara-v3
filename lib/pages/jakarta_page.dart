@@ -98,22 +98,31 @@ class _JakartaPageState extends State<JakartaPage> {
         // untuk memicu build ulang dan menampilkan komentar baru.
         setState(() {
           // Tambahkan komentar ke list global
-          mockComments.add(Comment(name, "Baru saja", content)); 
+          mockComments.add(Comment(name, "Baru saja", content));
         });
         _nameController.clear();
         _commentController.clear();
         // Tampilkan Snackbar konfirmasi
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Komentar berhasil ditambahkan (Mock).', style: TextStyle(fontFamily: 'Nusantara'))),
+          const SnackBar(
+            content: Text(
+              'Komentar berhasil ditambahkan (Mock).',
+              style: TextStyle(fontFamily: 'Nusantara'),
+            ),
+          ),
         );
       } else {
         // Tampilkan Snackbar jika input kosong
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nama dan komentar tidak boleh kosong.', style: TextStyle(fontFamily: 'Nusantara'))),
+          const SnackBar(
+            content: Text(
+              'Nama dan komentar tidak boleh kosong.',
+              style: TextStyle(fontFamily: 'Nusantara'),
+            ),
+          ),
         );
       }
     }
-
 
     // List Komentar yang akan di-build
     final commentList = Column(
@@ -133,7 +142,7 @@ class _JakartaPageState extends State<JakartaPage> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-              )
+              ),
             ]
           : mockComments.map((comment) {
               return Padding(
@@ -174,7 +183,11 @@ class _JakartaPageState extends State<JakartaPage> {
                         height: 1.5,
                       ),
                     ),
-                    const Divider(color: Colors.white12, height: 10, thickness: 0.5),
+                    const Divider(
+                      color: Colors.white12,
+                      height: 10,
+                      thickness: 0.5,
+                    ),
                   ],
                 ),
               );
@@ -210,7 +223,7 @@ class _JakartaPageState extends State<JakartaPage> {
                 blurRadius: 10,
                 offset: const Offset(0, 5),
               ),
-            ]
+            ],
           ),
           child: Column(
             children: [
@@ -218,13 +231,25 @@ class _JakartaPageState extends State<JakartaPage> {
                 controller: _nameController, // <--- Controller Nama
                 decoration: InputDecoration(
                   hintText: "Nama Anda",
-                  hintStyle: TextStyle(color: Colors.grey.shade500, fontFamily: 'Nusantara'),
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontFamily: 'Nusantara',
+                  ),
                   filled: true,
                   fillColor: Colors.black.withOpacity(0.3),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 10,
+                  ),
                 ),
-                style: const TextStyle(color: Colors.white, fontFamily: 'Nusantara'),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Nusantara',
+                ),
               ),
               const SizedBox(height: 15),
               TextField(
@@ -232,13 +257,25 @@ class _JakartaPageState extends State<JakartaPage> {
                 maxLines: 4,
                 decoration: InputDecoration(
                   hintText: "Tulis komentar Anda di sini...",
-                  hintStyle: TextStyle(color: Colors.grey.shade500, fontFamily: 'Nusantara'),
+                  hintStyle: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontFamily: 'Nusantara',
+                  ),
                   filled: true,
                   fillColor: Colors.black.withOpacity(0.3),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 15,
+                    vertical: 15,
+                  ),
                 ),
-                style: const TextStyle(color: Colors.white, fontFamily: 'Nusantara'),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'Nusantara',
+                ),
               ),
               const SizedBox(height: 15),
               SizedBox(
@@ -287,7 +324,9 @@ class _JakartaPageState extends State<JakartaPage> {
         // Navigasi ke IntroPage dan HAPUS semua rute sebelumnya (pushReplacement)
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const IntroPage()), // <--- Navigasi ke IntroPage
+          MaterialPageRoute(
+            builder: (context) => const IntroPage(),
+          ), // <--- Navigasi ke IntroPage
         );
       } else if (pageRoutes.containsKey(destination)) {
         // NAVIGASI NYATA untuk halaman daerah lain (menggunakan pushReplacement)
@@ -299,7 +338,12 @@ class _JakartaPageState extends State<JakartaPage> {
       } else {
         // Fallback jika ada menu yang belum terdefinisi
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Halaman $destination belum diimplementasikan.', style: const TextStyle(fontFamily: 'Nusantara'))),
+          SnackBar(
+            content: Text(
+              'Halaman $destination belum diimplementasikan.',
+              style: const TextStyle(fontFamily: 'Nusantara'),
+            ),
+          ),
         );
       }
     }
@@ -315,7 +359,7 @@ class _JakartaPageState extends State<JakartaPage> {
 
     return Drawer(
       // Background Drawer sedikit transparan gelap
-      backgroundColor: Colors.black.withOpacity(0.95), 
+      backgroundColor: Colors.black.withOpacity(0.95),
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
@@ -326,7 +370,9 @@ class _JakartaPageState extends State<JakartaPage> {
               padding: EdgeInsets.zero,
               margin: EdgeInsets.zero,
               decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.amber, width: 2)),
+                border: Border(
+                  bottom: BorderSide(color: Colors.amber, width: 2),
+                ),
               ),
               child: Stack(
                 children: [
@@ -337,7 +383,12 @@ class _JakartaPageState extends State<JakartaPage> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey.shade800,
-                        child: const Center(child: Text("Header Image Not Found", style: TextStyle(color: Colors.red))),
+                        child: const Center(
+                          child: Text(
+                            "Header Image Not Found",
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -392,40 +443,53 @@ class _JakartaPageState extends State<JakartaPage> {
           // Menu Home (Fungsi navigasi nyata)
           ListTile(
             leading: const Icon(Icons.home, color: iconColor),
-            title: const Text('Home', style: TextStyle(fontFamily: 'Nusantara', color: listTileColor, fontSize: 18)),
+            title: const Text(
+              'Home',
+              style: TextStyle(
+                fontFamily: 'Nusantara',
+                color: listTileColor,
+                fontSize: 18,
+              ),
+            ),
             onTap: () => navigateTo('Home'), // <--- Menuju IntroPage
           ),
-          
+
           const Divider(color: Colors.white12),
 
           // === ExpansionTile Sejarah Daerah ===
           ExpansionTile(
             initiallyExpanded: true, // Biarkan terbuka secara default
-            tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0),
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 0,
+            ),
             leading: const Icon(Icons.map_outlined, color: iconColor),
             title: const Text(
               'Sejarah Daerah',
               style: TextStyle(
                 fontFamily: 'Nusantara',
-                color: Colors.white, // Ganti warna judul agar berbeda dari sub-menu
+                color: Colors
+                    .white, // Ganti warna judul agar berbeda dari sub-menu
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             // Warna ikon panah saat terbuka/tertutup
-            iconColor: Colors.amber, 
+            iconColor: Colors.amber,
             collapsedIconColor: Colors.white70,
-            
+
             // Sub-menu (ListTile)
             children: regionalHistory.map((item) {
               final isCurrent = item['isCurrent'] as bool;
               final name = item['name'] as String;
-              
+
               return ListTile(
                 // Tambahkan padding kiri agar terlihat sebagai sub-menu
-                contentPadding: const EdgeInsets.only(left: 32.0, right: 16.0), 
+                contentPadding: const EdgeInsets.only(left: 32.0, right: 16.0),
                 leading: Icon(
-                  isCurrent ? Icons.location_city : Icons.location_city_outlined, 
+                  isCurrent
+                      ? Icons.location_city
+                      : Icons.location_city_outlined,
                   color: isCurrent ? Colors.amber : listTileColor,
                 ),
                 title: Text(
@@ -437,11 +501,12 @@ class _JakartaPageState extends State<JakartaPage> {
                     fontSize: 16,
                   ),
                 ),
-                onTap: () => navigateTo(name), // <--- Menggunakan fungsi navigasi baru
+                onTap: () =>
+                    navigateTo(name), // <--- Menggunakan fungsi navigasi baru
               );
             }).toList(),
           ),
-          
+
           const Divider(color: Colors.white12),
         ],
       ),
@@ -462,27 +527,27 @@ class _JakartaPageState extends State<JakartaPage> {
     final double topSafeAreaPadding = MediaQuery.of(context).padding.top;
     const double kAppBarHeight = 56.0; // Tinggi standar AppBar
     final double topPadding = topSafeAreaPadding + kAppBarHeight;
-    
+
     // =========================================================================
     // Konten Teks Jakarta
     // =========================================================================
-    final String part1Awal = 
-      "Jakarta adalah ibu kota dan kota terbesar Indonesia. Terletak di estuari Sungai Ciliwung, di bagian barat laut Jawa, daerah ini telah lama menopang pemukiman manusia. Bukti bersejarah dari Jakarta berasal dari abad ke-4 M, saat ia merupakan sebuah permukiman dan pelabuhan Hindu. Kota ini telah diklaim secara berurutan oleh kerajaan bercorak India Tarumanegara, Kerajaan Sunda Hindu, Kesultanan Banten Muslim, dan oleh pemerintahan Belanda, Jepang, dan Indonesia. Hindia Belanda membangun daerah tersebut sebelum direbut oleh Kekaisaran Jepang semasa Perang Dunia II dan akhirnya menjadi merdeka sebagai bagian dari Indonesia.";
-    
-    final String part2Perkembangan = 
-      "Jakarta telah dikenal dengan beberapa nama. Ia disebut Sunda Kalapa selama periode Kerajaan Sunda dan Jayakarta, Djajakarta, atau Jacatra selama periode singkat Kesultanan Banten. Setelah itu, Jakarta berkembang dalam tiga tahap. \"Kota Tua Jakarta\", yang dekat dengan laut di utara, berkembang antara 1619 dan 1799 pada era VOC. \"Kota baru\" di selatan berkembang antara 1809 dan 1942 setelah pemerintah Belanda mengambil alih penguasaan Batavia dari VOC yang gagal yang sewanya telah berakhir pada 1799. Yang ketiga adalah perkembangan Jakarta modern sejak proklamasi kemerdekaan pada 1945. Di bawah pemerintahan Belanda, ia dikenal sebagai Batavia (1619–1949), dan Djakarta (dalam bahasa Belanda) atau Jakarta, selama pendudukan Jepang dan masa modern.";
-      
-    final String part3KerajaanAwal = 
-      "Daerah pesisir dan pelabuhan Jakarta di utara Jawa Barat telah menjadi lokasi permukiman manusia sejak kebudayaan Buni abad ke-4 SM. Catatan sejarah paling awal yang ditemukan di Jakarta adalah Prasasti Tugu, yang ditemukan di Kecamatan Tugu, Jakarta Utara. Ia merupakan salah satu prasasti tertua dalam Sejarah Indonesia. Daerah tersebut adalah bagian dari kerajaan bercorak India Tarumanegara.";
-      
-    final String part4Tarumanagara = 
-      "Pada tahun 397 M, Raja Purnawarman mendirikan Sunda Pura, yang terletak di pantai utara Jawa Barat, sebagai ibu kota baru kerajaan.[4] Ibu kota kerajaan Tarumanagara tersebut kemungkinan besar terletak di suatu tempat antara Kecamatan Tugu, Jakarta Utara dan Kabupaten Bekasi, Jawa Barat. Purnawarman meninggalkan tujuh batu peringatan di seluruh daerah tersebut, termasuk Provinsi Banten dan Jawa Barat saat ini, yang terdiri dari prasasti yang memuat namanya.";
-    
+    final String part1Awal =
+        "Jakarta adalah ibu kota dan kota terbesar Indonesia. Terletak di estuari Sungai Ciliwung, di bagian barat laut Jawa, daerah ini telah lama menopang pemukiman manusia. Bukti bersejarah dari Jakarta berasal dari abad ke-4 M, saat ia merupakan sebuah permukiman dan pelabuhan Hindu. Kota ini telah diklaim secara berurutan oleh kerajaan bercorak India Tarumanegara, Kerajaan Sunda Hindu, Kesultanan Banten Muslim, dan oleh pemerintahan Belanda, Jepang, dan Indonesia. Hindia Belanda membangun daerah tersebut sebelum direbut oleh Kekaisaran Jepang semasa Perang Dunia II dan akhirnya menjadi merdeka sebagai bagian dari Indonesia.";
+
+    final String part2Perkembangan =
+        "Jakarta telah dikenal dengan beberapa nama. Ia disebut Sunda Kalapa selama periode Kerajaan Sunda dan Jayakarta, Djajakarta, atau Jacatra selama periode singkat Kesultanan Banten. Setelah itu, Jakarta berkembang dalam tiga tahap. \"Kota Tua Jakarta\", yang dekat dengan laut di utara, berkembang antara 1619 dan 1799 pada era VOC. \"Kota baru\" di selatan berkembang antara 1809 dan 1942 setelah pemerintah Belanda mengambil alih penguasaan Batavia dari VOC yang gagal yang sewanya telah berakhir pada 1799. Yang ketiga adalah perkembangan Jakarta modern sejak proklamasi kemerdekaan pada 1945. Di bawah pemerintahan Belanda, ia dikenal sebagai Batavia (1619–1949), dan Djakarta (dalam bahasa Belanda) atau Jakarta, selama pendudukan Jepang dan masa modern.";
+
+    final String part3KerajaanAwal =
+        "Daerah pesisir dan pelabuhan Jakarta di utara Jawa Barat telah menjadi lokasi permukiman manusia sejak kebudayaan Buni abad ke-4 SM. Catatan sejarah paling awal yang ditemukan di Jakarta adalah Prasasti Tugu, yang ditemukan di Kecamatan Tugu, Jakarta Utara. Ia merupakan salah satu prasasti tertua dalam Sejarah Indonesia. Daerah tersebut adalah bagian dari kerajaan bercorak India Tarumanegara.";
+
+    final String part4Tarumanagara =
+        "Pada tahun 397 M, Raja Purnawarman mendirikan Sunda Pura, yang terletak di pantai utara Jawa Barat, sebagai ibu kota baru kerajaan.[4] Ibu kota kerajaan Tarumanagara tersebut kemungkinan besar terletak di suatu tempat antara Kecamatan Tugu, Jakarta Utara dan Kabupaten Bekasi, Jawa Barat. Purnawarman meninggalkan tujuh batu peringatan di seluruh daerah tersebut, termasuk Provinsi Banten dan Jawa Barat saat ini, yang terdiri dari prasasti yang memuat namanya.";
+
     // BAGIAN BARU: Kerajaan Sunda (669–1527)
     final String part5KerajaanSunda =
-      "Setelah kekuasaan Tarumanagara melemah, wilayahnya kemudian menjadi bagian dari Kerajaan Sunda. Menurut sumber Tiongkok, Chu-fan-chi yang ditulis oleh Chou Ju-kua pada awal abad ke-13, kerajaan Sriwijaya yang berbasis di Sumatra menguasai Sumatra, Semenanjung Malaya, dan Jawa bagian barat (dikenal sebagai Sunda). Pelabuhan Sunda digambarkan sebagai pelabuhan yang strategis dan ramai, dengan lada dari Sunda terkenal karena kualitasnya yang sangat baik. Penduduk di wilayah tersebut bekerja di bidang pertanian, dan rumah mereka dibangun di atas tiang kayu.\n\n"
-      "Salah satu pelabuhan di muara Sungai Ciliwung kemudian dinamai Sunda Kelapa atau Kalapa (Kelapa Sunda), sebagaimana tertulis dalam naskah Hindu Bujangga Manik, yaitu manuskrip lontar seorang resi, yang merupakan salah satu peninggalan berharga dari sastra Sunda Kuno. Pelabuhan tersebut melayani ibu kota Pakuan Pajajaran (sekarang Bogor), pusat pemerintahan Kerajaan Sunda. Pada abad ke-14, Sunda Kelapa berkembang menjadi pelabuhan perdagangan utama kerajaan.\n\n"
-      "Catatan para penjelajah Eropa abad ke-16 menyebut sebuah kota bernama Kalapa, yang tampaknya berfungsi sebagai pelabuhan utama kerajaan Hindu Sunda. Pada tahun 1522, pihak Portugis membuat perjanjian politik dan ekonomi yang disebut Luso-Sundanese padrão dengan Kerajaan Sunda, sebagai otoritas pelabuhan tersebut. Sebagai imbalan atas bantuan militer menghadapi ancaman Kesultanan Demak yang sedang bangkit, Prabu Surawisesa, raja Sunda pada masa itu, memberikan mereka akses bebas dalam perdagangan lada. Orang-orang Portugis yang mengabdi pada raja pun menetap di Sunda Kelapa.";
+        "Setelah kekuasaan Tarumanagara melemah, wilayahnya kemudian menjadi bagian dari Kerajaan Sunda. Menurut sumber Tiongkok, Chu-fan-chi yang ditulis oleh Chou Ju-kua pada awal abad ke-13, kerajaan Sriwijaya yang berbasis di Sumatra menguasai Sumatra, Semenanjung Malaya, dan Jawa bagian barat (dikenal sebagai Sunda). Pelabuhan Sunda digambarkan sebagai pelabuhan yang strategis dan ramai, dengan lada dari Sunda terkenal karena kualitasnya yang sangat baik. Penduduk di wilayah tersebut bekerja di bidang pertanian, dan rumah mereka dibangun di atas tiang kayu.\n\n"
+        "Salah satu pelabuhan di muara Sungai Ciliwung kemudian dinamai Sunda Kelapa atau Kalapa (Kelapa Sunda), sebagaimana tertulis dalam naskah Hindu Bujangga Manik, yaitu manuskrip lontar seorang resi, yang merupakan salah satu peninggalan berharga dari sastra Sunda Kuno. Pelabuhan tersebut melayani ibu kota Pakuan Pajajaran (sekarang Bogor), pusat pemerintahan Kerajaan Sunda. Pada abad ke-14, Sunda Kelapa berkembang menjadi pelabuhan perdagangan utama kerajaan.\n\n"
+        "Catatan para penjelajah Eropa abad ke-16 menyebut sebuah kota bernama Kalapa, yang tampaknya berfungsi sebagai pelabuhan utama kerajaan Hindu Sunda. Pada tahun 1522, pihak Portugis membuat perjanjian politik dan ekonomi yang disebut Luso-Sundanese padrão dengan Kerajaan Sunda, sebagai otoritas pelabuhan tersebut. Sebagai imbalan atas bantuan militer menghadapi ancaman Kesultanan Demak yang sedang bangkit, Prabu Surawisesa, raja Sunda pada masa itu, memberikan mereka akses bebas dalam perdagangan lada. Orang-orang Portugis yang mengabdi pada raja pun menetap di Sunda Kelapa.";
     // =========================================================================
 
     return Scaffold(
@@ -495,21 +560,31 @@ class _JakartaPageState extends State<JakartaPage> {
 
       appBar: AppBar(
         // Menghilangkan tombol kembali bawaan
-        automaticallyImplyLeading: false, 
+        automaticallyImplyLeading: false,
 
         // 1. Tombol Menu Kustom (Hamburger) di posisi Leading
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.amber), // Ikon 3 strip (warna emas)
+            icon: const Icon(
+              Icons.menu,
+              color: Colors.amber,
+            ), // Ikon 3 strip (warna emas)
             onPressed: () {
               Scaffold.of(context).openDrawer(); // Membuka Drawer
             },
             tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
           ),
         ),
-        
-        title: const Text('Sejarah Jakarta', style: TextStyle(fontFamily: 'Nusantara', color: Colors.white, fontWeight: FontWeight.bold)),
-        
+
+        title: const Text(
+          'Sejarah Jakarta',
+          style: TextStyle(
+            fontFamily: 'Nusantara',
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+
         // 2. Icon User/Admin di Actions (Kanan)
         actions: [
           IconButton(
@@ -517,7 +592,12 @@ class _JakartaPageState extends State<JakartaPage> {
             onPressed: () {
               // Logika untuk halaman Profil/Admin (Saat ini hanya notifikasi)
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Fungsi Profil/Admin akan ditambahkan.', style: TextStyle(fontFamily: 'Nusantara'))),
+                const SnackBar(
+                  content: Text(
+                    'Fungsi Profil/Admin akan ditambahkan.',
+                    style: TextStyle(fontFamily: 'Nusantara'),
+                  ),
+                ),
               );
             },
             tooltip: 'Profil Pengguna/Admin',
@@ -540,7 +620,12 @@ class _JakartaPageState extends State<JakartaPage> {
               // Fallback jika gambar tidak ditemukan
               errorBuilder: (context, error, stackTrace) => Container(
                 color: Colors.black,
-                child: const Center(child: Text("Background Image Not Found", style: TextStyle(color: Colors.red))),
+                child: const Center(
+                  child: Text(
+                    "Background Image Not Found",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
               ),
             ),
           ),
@@ -548,7 +633,9 @@ class _JakartaPageState extends State<JakartaPage> {
           // === 2. Dark Overlay for Contrast ===
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.7), // Overlay gelap untuk meningkatkan kontras teks
+              color: Colors.black.withOpacity(
+                0.7,
+              ), // Overlay gelap untuk meningkatkan kontras teks
             ),
           ),
 
@@ -571,11 +658,17 @@ class _JakartaPageState extends State<JakartaPage> {
                           width: double.infinity,
                           height: isMobile ? 220 : 350, // Tinggi responsif
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            height: isMobile ? 220 : 350,
-                            color: Colors.grey.shade800,
-                            child: const Center(child: Text("Hero Image Not Found", style: TextStyle(color: Colors.red))),
-                          ),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                height: isMobile ? 220 : 350,
+                                color: Colors.grey.shade800,
+                                child: const Center(
+                                  child: Text(
+                                    "Hero Image Not Found",
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ),
+                              ),
                         ),
                         Container(
                           width: double.infinity,
@@ -593,7 +686,10 @@ class _JakartaPageState extends State<JakartaPage> {
                           ),
                         ),
                         Padding(
-                          padding: EdgeInsets.only(left: horizontalPadding, bottom: 20),
+                          padding: EdgeInsets.only(
+                            left: horizontalPadding,
+                            bottom: 20,
+                          ),
                           child: const Text(
                             'J A K A R T A',
                             style: TextStyle(
@@ -610,7 +706,10 @@ class _JakartaPageState extends State<JakartaPage> {
 
                     // === Konten Teks di bawah gambar ===
                     Padding(
-                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 30),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: horizontalPadding,
+                        vertical: 30,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -622,7 +721,7 @@ class _JakartaPageState extends State<JakartaPage> {
                           ),
 
                           const Divider(color: Colors.white24, height: 40),
-                          
+
                           // === Bagian 2: Perkembangan Nama dan Tahap Kota ===
                           _buildContentSection(
                             title: "Perkembangan Nama dan Tiga Tahap Kota",
@@ -647,10 +746,10 @@ class _JakartaPageState extends State<JakartaPage> {
                             content: part4Tarumanagara,
                             isMobile: isMobile,
                           ),
-                          
+
                           // === Bagian BARU: Kerajaan Sunda (669–1527) ===
                           const Divider(color: Colors.white24, height: 40),
-                          
+
                           _buildContentSection(
                             title: "Kerajaan Sunda (669–1527)",
                             content: part5KerajaanSunda,
