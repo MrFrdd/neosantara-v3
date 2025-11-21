@@ -478,27 +478,19 @@ class _IntroPageState extends State<IntroPage> {
 
         // --- LEADING BARU (Menggantikan Tombol Back/Drawer) ---
         leading: isMobile
-            ? IconButton(
-                icon: const Icon(Icons.home, color: Colors.white, size: 28),
-                onPressed: () {
-                  // Tutup Drawer jika terbuka
-                  if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
-                    Navigator.pop(context);
-                  }
-                  // Karena ini adalah IntroPage, navigasi ke "Home" adalah pop ke root.
-                  // Jika ini bukan root, Anda perlu: Navigator.of(context).popUntil((route) => route.isFirst);
-                  // Di kasus ini, karena Anda di IntroPage (root), tidak perlu aksi pop.
-                  // JIKA ADA MAKSUD UNTUK MEMBUKA DRAWER DI SINI: ganti logika ini
-                  // dengan Scaffold.of(context).openDrawer();
-
-                  // Karena Anda ingin fungsinya menjadi "Home", jika tombol back
-                  // muncul (artinya ada halaman sebelumnya), maka pop. Jika tombol
-                  // drawer muncul (di root), maka tidak perlu aksi (kecuali membuka drawer).
-
-                  // Untuk kasus IntroPage ini (asumsi ini adalah root):
-                  Scaffold.of(context).openDrawer();
+            ? Builder(
+                builder: (context) {
+                  return IconButton(
+                    // PERUBAHAN UTAMA: Mengganti Icons.home dengan Icons.menu (hamburger)
+                    icon: const Icon(Icons.menu, color: Colors.white, size: 28),
+                    onPressed: () {
+                      // Logika untuk membuka Drawer menggunakan Scaffold.of(context)
+                      // Builder ditambahkan untuk memastikan context dapat menemukan Scaffold
+                      Scaffold.of(context).openDrawer();
+                    },
+                    tooltip: "Menu",
+                  );
                 },
-                tooltip: "Menu", // Tetap berfungsi sebagai menu
               )
             : null,
 
