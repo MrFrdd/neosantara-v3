@@ -1,8 +1,8 @@
 // lib/pages/payment_page.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http; // Import package http
-import 'dart:convert'; // Import dart:convert
+import 'package:http/http.dart' as http; 
+import 'dart:convert'; 
 
 class PaymentPage extends StatefulWidget {
   final int total;
@@ -13,9 +13,9 @@ class PaymentPage extends StatefulWidget {
   const PaymentPage({
     super.key,
     required this.total,
-    required this.cartItems, // Diperlukan
-    required this.idUser, // Diperlukan
-    required this.namaUser, // Diperlukan
+    required this.cartItems, 
+    required this.idUser, 
+    required this.namaUser, 
   });
 
   @override
@@ -26,67 +26,95 @@ class _PaymentPageState extends State<PaymentPage> {
   bool processing = false;
   String selectedMethod = 'Transfer Bank';
 
-  // Alamat API (Ganti [IP_KOMPUTER_ANDA] dengan IP lokal Anda atau '10.0.2.2' jika menggunakan Android Emulator)
-  // Pastikan XAMPP Anda berjalan dan folder 'api_flutter' ada di htdocs
+  // Alamat API untuk proses transaksi
+  // GANTI: Sesuaikan dengan IP Anda atau '10.0.2.2' jika Emulator
   static const String _apiBaseUrl = 'http://localhost/flutter_budaya_api/insert_transaksi.php'; 
 
   Future<void> _pay() async {
+    // --- SAFETY CHECK (PENTING) ---
+    if (widget.idUser <= 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ID Pengguna tidak valid. Harap login ulang di halaman sebelumnya.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+    // ---------------------------------
+    
     setState(() => processing = true);
 
     final dataToSend = {
-      'id_user': widget.idUser,
+      // Kirim ID dan Total sebagai String (best practice)
+      'id_user': widget.idUser.toString(), 
       'nama_user': widget.namaUser,
-      'cart_items': widget.cartItems, // Data keranjang lengkap
-      'total_bayar': widget.total,
+      'total_bayar': widget.total.toString(),
       'metode_pembayaran': selectedMethod,
+      'cart_items': widget.cartItems,
     };
-
+    
     try {
       final response = await http.post(
         Uri.parse(_apiBaseUrl),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(dataToSend),
+        body: json.encode(dataToSend),
       );
 
       if (!mounted) return;
 
-      if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
-        if (result['success'] == true) {
-          // Berhasil, kembalikan true ke CartPage
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Pembayaran Sukses! ID Transaksi: ${result['id_transaksi']}')),
-          );
-          Navigator.of(context).pop(true); 
-        } else {
-          // Gagal dari PHP
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Pembayaran Gagal: ${result['message']}')),
-          );
-        }
-      } else {
-        // Gagal koneksi/server (misalnya status 500)
+      Map<String, dynamic> responseData;
+      try {
+        responseData = json.decode(response.body);
+      } on FormatException {
+        // Error jika respons bukan JSON
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error Server (${response.statusCode}): ${response.body}'),
+            content: Text('❌ ERROR DECODE JSON: Server mengirim respons tidak valid (Status HTTP: ${response.statusCode}).'),
+            backgroundColor: Colors.deepOrange,
+          ),
+        );
+        return;
+      }
+
+      if (responseData['success'] == true) { 
+        // Sukses
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['message'] ?? 'Pembayaran berhasil!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Kembali ke CartPage dengan hasil true (agar keranjang dikosongkan)
+        Navigator.of(context).pop(true);
+      } else {
+        // Gagal dari server
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(responseData['message'] ?? 'Pembayaran gagal. Mohon coba lagi.'),
+            backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
-      // Error lain (koneksi, parsing, dll.)
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan jaringan/server: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    } finally {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Terjadi kesalahan koneksi: $e')),
-        );
+        setState(() => processing = false);
       }
     }
-
-    setState(() => processing = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    // ... (widget build tetap sama)
     final total = widget.total;
 
     return Scaffold(
@@ -100,39 +128,45 @@ class _PaymentPageState extends State<PaymentPage> {
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
-            // ... (Card Ringkasan Pembayaran)
+            // ... (Tampilan Kartu Total Bayar, sudah benar)
             Card(
               color: Colors.grey[900],
               child: ListTile(
-                leading: const Icon(Icons.receipt, color: Colors.white70),
                 title: const Text(
-                  'Ringkasan Pembayaran',
-                  style: TextStyle(color: Colors.white),
+                  'TOTAL BAYAR',
+                  style: TextStyle(color: Colors.white70),
                 ),
-                subtitle: Text(
-                  'Total: Rp $total',
-                  style: const TextStyle(color: Colors.white70),
+                trailing: Text(
+                  'Rp $total',
+                  style: const TextStyle(
+                    color: Colors.amber,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 14),
-            // ... (Card Pilihan Metode Pembayaran)
-            Card(
-              color: Colors.grey[900],
-              child: Column(
+            const SizedBox(height: 18),
+            // ... (Pilihan Metode Pembayaran, sudah benar)
+            Expanded(
+              child: ListView(
                 children: [
+                  Text(
+                    'Pilih Metode Pembayaran:',
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   RadioListTile<String>(
                     value: 'Transfer Bank',
                     groupValue: selectedMethod,
                     title: const Text(
-                      'Transfer Bank',
+                      'Transfer Bank (BCA/Mandiri)',
                       style: TextStyle(color: Colors.white),
                     ),
                     activeColor: Colors.greenAccent[400],
                     onChanged: (v) => setState(() => selectedMethod = v!),
                   ),
                   RadioListTile<String>(
-                    value: 'QRIS',
+                    value: 'Qris',
                     groupValue: selectedMethod,
                     title: const Text(
                       'QRIS (scan)',
@@ -155,7 +189,7 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
             ),
             const SizedBox(height: 18),
-            // ... (Loading/Button)
+            // --- TOMBOL BAYAR ---
             if (processing)
               const Center(
                 child: CircularProgressIndicator(color: Colors.greenAccent),
