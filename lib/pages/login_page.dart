@@ -1,6 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Import ini WAJIB ada
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart'; // <<< PENTING: Import SharedPreferences
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onClose;
@@ -12,8 +15,9 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  bool isLogin = true; // Toggle antara login & daftar
-  bool _obscurePassword = true; // Untuk sembunyikan password
+  bool isLogin = true;
+  bool _obscurePassword = true;
+  bool _isLoading = false; // Variabel untuk indikator loading
 
   // Controller untuk field
   final TextEditingController _emailController = TextEditingController();
@@ -25,7 +29,6 @@ class _LoginPageState extends State<LoginPage> {
   bool _namaError = false;
   bool _passwordError = false;
 
-  // Dispose controllers (Best Practice)
   @override
   void dispose() {
     _emailController.dispose();
@@ -36,17 +39,15 @@ class _LoginPageState extends State<LoginPage> {
 
   // === Fungsi Validasi Email ===
   bool _isValidEmail(String email) {
-    // Memeriksa apakah email mengandung @
     return email.contains('@');
   }
 
-  // === Fungsi Validasi Semua Field ===
-  void _handleSubmit() {
-    // Pastikan tidak ada aksi ganda saat API dipanggil
-    if (!mounted) return;
+  // === Fungsi Validasi Semua Field dan API Call ===
+  Future<void> _handleSubmit() async {
+    if (!mounted || _isLoading) return;
 
+    // --- (1) Validasi Input Lokal ---
     setState(() {
-      // Basic validation: check if fields are empty
       _emailError = _emailController.text.trim().isEmpty;
       _passwordError = _passwordController.text.trim().isEmpty;
       _namaError = !isLogin && _namaController.text.trim().isEmpty;
@@ -75,21 +76,103 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    // Jika semua valid, ini adalah tempat untuk memanggil API.
-    // Simulasi sukses:
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Berhasil ${isLogin ? "Masuk" : "Mendaftar"}! (Simulasi)',
-        ),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    // --- (2) Setup API Call ---
+    setState(() => _isLoading = true); // Mulai loading
 
-    // Tutup modal setelah simulasi
-    widget.onClose();
+    // GANTI 'http://10.0.2.2' dengan alamat IP lokal Anda jika menggunakan perangkat fisik
+    const String baseUrl = 'http://localhost/flutter_budaya_api/'; 
+    final String endpoint = isLogin
+        ? '${baseUrl}login.php'
+        : '${baseUrl}register.php';
+    
+    final Map<String, String> data = isLogin
+        ? {
+            'email': _emailController.text.trim(),
+            'kata_sandi': _passwordController.text.trim(),
+          }
+        : {
+            'email': _emailController.text.trim(),
+            'nama_lengkap': _namaController.text.trim(),
+            'kata_sandi': _passwordController.text.trim(),
+          };
+
+    try {
+      final response = await http.post(
+        Uri.parse(endpoint),
+        body: data,
+      );
+
+      if (!mounted) return;
+
+      // --- (3) Penanganan Respons API ---
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> responseData = json.decode(response.body);
+
+        if (responseData['status'] == 'success') {
+          
+          // >>> START: LOGIKA PENYIMPANAN DATA PROFIL
+          final prefs = await SharedPreferences.getInstance();
+          
+          if (responseData['data'] != null) {
+              final userData = responseData['data'];
+              // Simpan data user ke SharedPreferences
+              prefs.setString('user_id', userData['id_user'].toString());
+              prefs.setString('user_name', userData['nama_lengkap']);
+              prefs.setString('user_email', userData['email']);
+              prefs.setBool('is_logged_in', true); // Penanda status login
+          }
+          // <<< END: LOGIKA PENYIMPANAN DATA PROFIL
+          
+          // Tampilkan pesan sukses
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(responseData['message'] ?? 'Berhasil!'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+
+          // Tutup modal setelah sukses
+          widget.onClose();
+          
+        } else {
+          // Kasus gagal dari server (misal: email sudah terdaftar/password salah)
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(responseData['message'] ?? 'Gagal!'),
+              backgroundColor: Colors.redAccent,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } else {
+        // Kasus kegagalan HTTP/Server error (e.g., 500)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal terhubung ke server. Status: ${response.statusCode}'),
+            backgroundColor: Colors.redAccent,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      // Kasus error jaringan atau server tidak dapat dijangkau
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Terjadi kesalahan jaringan/server: $e'),
+          backgroundColor: Colors.redAccent,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      // --- (4) Selesai Loading ---
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
+
 
   // === Widget untuk Field Input ===
   Widget _buildTextField({
@@ -155,7 +238,7 @@ class _LoginPageState extends State<LoginPage> {
     // === Definisikan shortcut keyboard ===
     final Map<ShortcutActivator, VoidCallback> shortcuts = {
       // Tombol Enter untuk submit
-      const SingleActivator(LogicalKeyboardKey.enter): _handleSubmit,
+      const SingleActivator(LogicalKeyboardKey.enter): _isLoading ? () {} : _handleSubmit, 
       // Tombol Escape untuk menutup modal
       const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
     };
@@ -165,7 +248,7 @@ class _LoginPageState extends State<LoginPage> {
         // === Efek Blur Background & Penutup Modal di luar area ===
         Positioned.fill(
           child: GestureDetector(
-            onTap: widget.onClose, // Tutup modal saat mengklik di luar
+            onTap: widget.onClose,
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
               child: Container(color: Colors.black.withOpacity(0.4)),
@@ -176,22 +259,19 @@ class _LoginPageState extends State<LoginPage> {
         // === Konten Login / Register dengan Keyboard Shortcuts ===
         Center(
           child: CallbackShortcuts(
-            // Menggunakan 'bindings' untuk CallbackShortcuts
             bindings: shortcuts,
             child: Focus(
-              // Memastikan widget ini dapat menerima input fokus keyboard
-              autofocus: true, // Fokus otomatis saat modal muncul
+              autofocus: true,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   vertical: 40.0,
-                ), // Padding untuk SingleChildScrollView
+                ),
                 child: Container(
                   width: screenWidth * 0.85,
                   constraints: const BoxConstraints(maxWidth: 380),
                   padding: const EdgeInsets.all(22),
                   margin: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    // Warna background modal
                     color: Colors.white.withOpacity(0.95),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
@@ -256,16 +336,26 @@ class _LoginPageState extends State<LoginPage> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        onPressed: _handleSubmit,
-                        child: Text(
-                          isLogin ? 'MASUK' : 'DAFTAR',
-                          style: const TextStyle(
-                            fontFamily: 'Nusantara',
-                            fontSize: 18,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        // DISABLED jika sedang loading
+                        onPressed: _isLoading ? null : _handleSubmit, 
+                        child: _isLoading // Tampilkan indikator loading atau teks
+                            ? const SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 3,
+                                ),
+                              )
+                            : Text(
+                                isLogin ? 'MASUK' : 'DAFTAR',
+                                style: const TextStyle(
+                                  fontFamily: 'Nusantara',
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
 
                       const SizedBox(height: 15),

@@ -16,15 +16,20 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   late List<Map<String, dynamic>> cart;
 
+  // --- Data User Placeholder ---
+  // Gunakan data user dummy (contoh) yang akan dikirim ke API
+  final int _currentUserId = 1; 
+  final String _currentUserName = 'Pelanggan Ujian Flutter';
+  // -----------------------------
+
   @override
   void initState() {
+    // Menyalin keranjang dari widget ke state untuk dimodifikasi
     cart = List<Map<String, dynamic>>.from(widget.cart);
     super.initState();
   }
 
-  // ================================
-  // FIX: total dengan cast aman
-  // ================================
+  // FIX: total dengan cast aman (menggunakan fold untuk menghitung total harga)
   int get total => cart.fold<int>(
     0,
     (sum, item) =>
@@ -32,6 +37,7 @@ class _CartPageState extends State<CartPage> {
   );
 
   void saveBack() {
+    // Memberikan kembali data keranjang yang telah diupdate ke halaman MerchandisePage
     widget.onCartChanged(cart);
   }
 
@@ -115,16 +121,30 @@ class _CartPageState extends State<CartPage> {
                         onPressed: cart.isEmpty
                             ? null
                             : () async {
+                                // Meneruskan data keranjang, total, id user, dan nama user
                                 final result = await Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (_) => PaymentPage(total: total),
+                                    builder: (_) => PaymentPage(
+                                      total: total,
+                                      cartItems: cart, // Meneruskan daftar item keranjang
+                                      idUser: _currentUserId, // Meneruskan ID User
+                                      namaUser: _currentUserName, // Meneruskan Nama User
+                                    ),
                                   ),
                                 );
 
+                                // Jika PaymentPage mengembalikan true (pembayaran sukses)
                                 if (result == true) {
                                   setState(() => cart.clear());
                                   saveBack();
-                                  Navigator.pop(context);
+                                  // Menampilkan pesan sukses ke user setelah kembali ke CartPage (opsional)
+                                  if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(content: Text('Pembayaran berhasil dan keranjang dikosongkan!'))
+                                      );
+                                  }
+                                  // Navigasi kembali ke halaman sebelumnya (MerchandisePage)
+                                  Navigator.pop(context); 
                                 }
                               },
                         child: const Text(
@@ -176,6 +196,7 @@ class _CartPageState extends State<CartPage> {
                   icon: const Icon(Icons.remove),
                   onPressed: () {
                     setState(() {
+                      // Mengurangi kuantitas atau menghapus item jika qty <= 1
                       if ((item['qty'] as int) > 1) {
                         item['qty'] = (item['qty'] as int) - 1;
                       } else {

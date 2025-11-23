@@ -1,10 +1,22 @@
 // lib/pages/payment_page.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http; // Import package http
+import 'dart:convert'; // Import dart:convert
 
 class PaymentPage extends StatefulWidget {
   final int total;
-  const PaymentPage({super.key, required this.total});
+  final List<Map<String, dynamic>> cartItems; // Tambahkan cartItems
+  final int idUser; // Tambahkan idUser
+  final String namaUser; // Tambahkan namaUser
+
+  const PaymentPage({
+    super.key,
+    required this.total,
+    required this.cartItems, // Diperlukan
+    required this.idUser, // Diperlukan
+    required this.namaUser, // Diperlukan
+  });
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -14,22 +26,67 @@ class _PaymentPageState extends State<PaymentPage> {
   bool processing = false;
   String selectedMethod = 'Transfer Bank';
 
+  // Alamat API (Ganti [IP_KOMPUTER_ANDA] dengan IP lokal Anda atau '10.0.2.2' jika menggunakan Android Emulator)
+  // Pastikan XAMPP Anda berjalan dan folder 'api_flutter' ada di htdocs
+  static const String _apiBaseUrl = 'http://localhost/flutter_budaya_api/insert_transaksi.php'; 
+
   Future<void> _pay() async {
     setState(() => processing = true);
 
-    // Simulasi pemrosesan pembayaran
-    await Future.delayed(const Duration(seconds: 2));
+    final dataToSend = {
+      'id_user': widget.idUser,
+      'nama_user': widget.namaUser,
+      'cart_items': widget.cartItems, // Data keranjang lengkap
+      'total_bayar': widget.total,
+      'metode_pembayaran': selectedMethod,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(_apiBaseUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(dataToSend),
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        if (result['success'] == true) {
+          // Berhasil, kembalikan true ke CartPage
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Pembayaran Sukses! ID Transaksi: ${result['id_transaksi']}')),
+          );
+          Navigator.of(context).pop(true); 
+        } else {
+          // Gagal dari PHP
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Pembayaran Gagal: ${result['message']}')),
+          );
+        }
+      } else {
+        // Gagal koneksi/server (misalnya status 500)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error Server (${response.statusCode}): ${response.body}'),
+          ),
+        );
+      }
+    } catch (e) {
+      // Error lain (koneksi, parsing, dll.)
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Terjadi kesalahan koneksi: $e')),
+        );
+      }
+    }
 
     setState(() => processing = false);
-
-    // Kembalikan hasil sukses ke halaman sebelumnya
-    if (mounted) {
-      Navigator.of(context).pop(true);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // ... (widget build tetap sama)
     final total = widget.total;
 
     return Scaffold(
@@ -43,6 +100,7 @@ class _PaymentPageState extends State<PaymentPage> {
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
+            // ... (Card Ringkasan Pembayaran)
             Card(
               color: Colors.grey[900],
               child: ListTile(
@@ -58,6 +116,7 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
             ),
             const SizedBox(height: 14),
+            // ... (Card Pilihan Metode Pembayaran)
             Card(
               color: Colors.grey[900],
               child: Column(
@@ -96,6 +155,7 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
             ),
             const SizedBox(height: 18),
+            // ... (Loading/Button)
             if (processing)
               const Center(
                 child: CircularProgressIndicator(color: Colors.greenAccent),

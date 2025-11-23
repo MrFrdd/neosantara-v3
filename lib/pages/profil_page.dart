@@ -1,11 +1,137 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+// PENTING: Import SharedPreferences untuk mengelola status login
+import 'package:shared_preferences/shared_preferences.dart'; 
 
-class ProfilPage extends StatelessWidget {
+class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
 
   @override
+  State<ProfilPage> createState() => _ProfilPageState();
+}
+
+class _ProfilPageState extends State<ProfilPage> {
+  // Variabel State untuk menyimpan data pengguna yang dimuat
+  String _namaLengkap = "Memuat...";
+  String _email = "Memuat...";
+  String _idUser = "";
+  
+  // Data dummy/statis yang belum terhubung ke API
+  String _telepon = "+62 812-3456-7890 (Dummy)";
+  String _alamat = "Jakarta, Indonesia (Dummy)";
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData(); // Panggil fungsi load saat halaman dimuat
+  }
+
+  // === Fungsi untuk memuat data dari SharedPreferences ===
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Ambil data yang disimpan saat login (sesuaikan kunci jika berbeda)
+    final savedName = prefs.getString('user_name') ?? "Pengguna Baru";
+    final savedEmail = prefs.getString('user_email') ?? "guest@neosantara.com";
+    final savedId = prefs.getString('user_id') ?? "";
+
+    if (mounted) {
+      setState(() {
+        _namaLengkap = savedName;
+        _email = savedEmail;
+        _idUser = savedId;
+      });
+    }
+  }
+
+  // === Fungsi untuk Logout (FIXED: Mengembalikan true ke IntroPage) ===
+  Future<void> _handleLogout() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Hapus status login dan data pengguna
+    await prefs.remove('is_logged_in'); 
+    await prefs.remove('user_name');
+    await prefs.remove('user_email');
+    await prefs.remove('user_id');
+    
+    if (mounted) {
+        // Mengembalikan nilai 'true' saat logout, agar IntroPage tahu
+        // bahwa pengguna ingin keluar.
+        Navigator.of(context).pop(true); 
+    }
+  }
+
+  // === Widget untuk menampilkan info user ===
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String title,
+    required String value,
+    required bool isMobile,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: isMobile ? 18 : 250,
+        right: isMobile ? 18 : 250,
+        bottom: 15,
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 32, color: Colors.amber.shade400),
+                const SizedBox(width: 18),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white.withOpacity(0.5),
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        value,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D0D),
 
@@ -40,142 +166,121 @@ class ProfilPage extends StatelessWidget {
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.amber.shade400,
-                            Colors.deepOrange.shade600,
-                          ],
-                        ),
+                        border: Border.all(color: Colors.amber, width: 3),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.amber.withOpacity(0.4),
-                            blurRadius: 30,
+                            color: Colors.amber.withOpacity(0.3),
+                            blurRadius: 10,
                             spreadRadius: 2,
                           ),
                         ],
                       ),
                       child: const CircleAvatar(
-                        radius: 62,
-                        backgroundImage: AssetImage("assets/profile.jpg"),
+                        radius: 50,
+                        backgroundImage: AssetImage(
+                          'assets/images/logo.png',
+                        ), // ASUMSI: Gambar ini ada
+                        backgroundColor: Colors.white12,
                       ),
                     ),
                   ),
                 ),
 
-                // ===================== TOMBOL BACK =====================
+                // ===================== TOMBOL BACK (FIXED: Mengembalikan false) =====================
                 SafeArea(
                   child: IconButton(
                     icon: const Icon(
                       Icons.arrow_back_ios_new,
                       color: Colors.white,
                     ),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ),
-
-                // ===================== TITEL HEADER =====================
-                const Positioned(
-                  top: 90,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Text(
-                      "Profil Saya",
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 1,
-                      ),
-                    ),
+                    // Mengembalikan nilai 'false' saat kembali normal
+                    onPressed: () => Navigator.pop(context, false), 
                   ),
                 ),
               ],
             ),
 
-            const SizedBox(height: 80),
+            const SizedBox(height: 12),
 
-            // ===================== NAMA & EMAIL =====================
-            const Text(
-              "Nama Pengguna",
-              style: TextStyle(
-                fontSize: 25,
+            // ===================== NAMA USER =====================
+            Text(
+              _namaLengkap, // Menggunakan state
+              style: const TextStyle(
+                fontFamily: 'Nusantara',
+                fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-
-            const SizedBox(height: 6),
-
+            const SizedBox(height: 4),
             Text(
-              "email@example.com",
+              'ID: $_idUser', // Menggunakan state
               style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 16,
+                fontFamily: 'Nusantara',
+                fontSize: 14,
+                color: Colors.white.withOpacity(0.6),
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 30),
 
-            // ===================== KARTU INFO DARK + GLASS =====================
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: Column(
-                children: [
-                  _buildInfoCard(
-                    icon: Icons.person_outline,
-                    title: "Nama Lengkap",
-                    value: "Bon Yanto",
-                  ),
-                  _buildInfoCard(
-                    icon: Icons.email_outlined,
-                    title: "Email",
-                    value: "email@example.com",
-                  ),
-                  _buildInfoCard(
-                    icon: Icons.phone_outlined,
-                    title: "Nomor Telepon",
-                    value: "+62 812-3456-7890",
-                  ),
-                  _buildInfoCard(
-                    icon: Icons.location_on_outlined,
-                    title: "Alamat",
-                    value: "Jakarta, Indonesia",
-                  ),
-                ],
-              ),
+            // ===================== INFO CARDS =====================
+            _buildInfoCard(
+              icon: Icons.email,
+              title: "Email",
+              value: _email, // Menggunakan state
+              isMobile: isMobile,
+            ),
+            _buildInfoCard(
+              icon: Icons.phone,
+              title: "Nomor Telepon",
+              value: _telepon, // Data dummy
+              isMobile: isMobile,
+            ),
+            _buildInfoCard(
+              icon: Icons.location_on,
+              title: "Alamat",
+              value: _alamat, // Data dummy
+              isMobile: isMobile,
             ),
 
-            const SizedBox(height: 35),
+            const SizedBox(height: 25),
 
             // ===================== EDIT PROFIL BUTTON =====================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 26),
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber.shade700,
+                  backgroundColor: Colors.amber,
+                  foregroundColor: Colors.black,
                   minimumSize: const Size(double.infinity, 53),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  shadowColor: Colors.amber.withOpacity(0.5),
-                  elevation: 6,
                 ),
-                icon: const Icon(Icons.edit, color: Colors.white),
+                icon: const Icon(Icons.edit, color: Colors.black),
                 label: const Text(
                   "Edit Profil",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Colors.black,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                onPressed: () {},
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text("Fitur Edit Profil belum diimplementasi."),
+                          backgroundColor: Colors.orange,
+                      ),
+                  );
+                },
               ),
             ),
 
             const SizedBox(height: 12),
 
+            // ===================== LOGOUT BUTTON (FIXED: Memanggil _handleLogout) =====================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 26),
               child: OutlinedButton.icon(
@@ -195,72 +300,12 @@ class ProfilPage extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                onPressed: () {},
+                onPressed: _handleLogout, // <<< Panggil fungsi Logout
               ),
             ),
 
             const SizedBox(height: 40),
           ],
-        ),
-      ),
-    );
-  }
-
-  // ===================== WIDGET GLASS INFO CARD =====================
-  Widget _buildInfoCard({
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 14),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withOpacity(0.15), width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.5),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 32, color: Colors.amber.shade400),
-              const SizedBox(width: 18),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.5),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      value,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

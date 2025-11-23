@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:project_uas_budayaindonesia/pages/merchandise_page.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/sejarah_dropdown.dart';
-// Import file pages yang sudah Anda buat di langkah perbaikan
+// PENTING: Import SharedPreferences untuk menyimpan status login
+import 'package:shared_preferences/shared_preferences.dart'; 
+
+// Import file pages yang sudah Anda buat
 import '../pages/login_page.dart';
 import '../pages/jakarta_page.dart';
 import '../pages/jawa_timur_page.dart';
@@ -23,6 +26,58 @@ class IntroPage extends StatefulWidget {
 
 class _IntroPageState extends State<IntroPage> {
   bool showLogin = false;
+  // State untuk melacak status login dan nama user
+  bool _isLoggedIn = false; 
+  String _userName = 'Profil';
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus(); // Cek status saat halaman dimuat
+  }
+
+  // === FUNGSI UNTUK MEMUAT STATUS LOGIN ===
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // Gunakan kunci ('is_logged_in' dan 'user_name') sesuai dengan yang disimpan di login_page.dart
+    final isLoggedIn = prefs.getBool('is_logged_in') ?? false; 
+    final userName = prefs.getString('user_name') ?? 'Profil';
+
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = isLoggedIn;
+        _userName = userName;
+      });
+    }
+  }
+  
+  // === FUNGSI UNTUK LOGOUT (Dipanggil dari tombol KELUAR di AppBar/Drawer) ===
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('is_logged_in'); // Hapus status login
+    await prefs.remove('user_name'); // Hapus nama user
+    
+    // Tambahkan penghapusan kunci lain yang terkait dengan sesi jika ada
+    await prefs.remove('user_email');
+    await prefs.remove('user_id');
+
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = false;
+        _userName = 'Profil';
+        showLogin = false; // Pastikan overlay login tertutup
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Berhasil keluar."),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
 
   final List<String> _regions = [
     "Jakarta",
@@ -34,12 +89,10 @@ class _IntroPageState extends State<IntroPage> {
 
   // === FUNGSI NAVIGASI SEJARAH DAERAH ===
   void _navigateToRegion(String region) {
-    // Tutup Drawer jika terbuka (penting untuk mobile)
     if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
       Navigator.pop(context);
     }
 
-    // Navigasi ke halaman spesifik
     if (region == "Jakarta") {
       Navigator.of(
         context,
@@ -63,16 +116,36 @@ class _IntroPageState extends State<IntroPage> {
     }
   }
 
-  // === FUNGSI NAVIGASI PROFIL ===
-  void _navigateToProfile() {
-    // Tutup Drawer jika terbuka (penting untuk mobile)
+  // === FUNGSI NAVIGASI PROFIL (FIXED: Menangani hasil logout dari ProfilPage) ===
+  void _navigateToProfile() async { 
     if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
       Navigator.pop(context);
     }
 
-    Navigator.of(
+    // Menggunakan await untuk mendapatkan nilai balik dari ProfilPage
+    final didLogout = await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (context) => const ProfilPage()));
+    
+    // Jika ProfilPage mengembalikan true, berarti pengguna menekan tombol "Keluar" di sana
+    if (mounted && didLogout == true) {
+      // Karena tombol "Keluar" di ProfilPage sudah menghapus data di SharedPreferences
+      // kita hanya perlu memperbarui state di IntroPage
+      await _checkLoginStatus(); 
+
+      // Tampilkan notifikasi dan tutup overlay jika terbuka
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Anda telah berhasil keluar.'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      
+      setState(() {
+        showLogin = false;
+      });
+    }
   }
 
   void _navigateToMerchandise() {
@@ -223,8 +296,85 @@ class _IntroPageState extends State<IntroPage> {
   // === Footer Section (Tentang Pembuat) ===
   Widget _footerSection(bool isMobile) {
     final double horizontalPadding = 16;
-    final double webContentMaxWidth = 1200;
-    final double topSpacing = isMobile ? 0 : 10;
+    // final double topSpacing = isMobile ? 0 : 10; // Dihapus untuk menghemat ruang vertikal
+    // Tentukan lebar maksimum untuk background card
+    final double contentCardMaxWidth = 650; 
+
+    // Bagian Informasi Pembuat (Teks)
+    Widget creatorInfo = Column(
+      // Perataan diubah ke rata kiri (start) untuk web
+      crossAxisAlignment: isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start, 
+      children: [
+        // Spasi vertikal kembali ke 40px (mempertahankan posisi teks)
+        if (!isMobile) const SizedBox(height: 47), 
+        Text(
+          'Tentang Pembuat',
+          style: TextStyle(
+            fontFamily: 'Nusantara',
+            fontSize: isMobile ? 14 : 14,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFFFFD700),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Dibuat oleh: Muhammad Frida & Arfana Ridho',
+          style: TextStyle(
+            fontFamily: 'Nusantara',
+            color: Colors.white,
+            fontSize: isMobile ? 13 : 12,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'NIM: 241011401999 & 241011401690',
+          style: TextStyle(
+            fontFamily: 'Nusantara',
+            color: Colors.white70,
+            fontSize: isMobile ? 12 : 12,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'KELAS: 03TPLP033',
+          style: TextStyle(
+            fontFamily: 'Nusantara',
+            color: Colors.white54,
+            fontSize: isMobile ? 12 : 12,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'MATKUL: Algoritma & Pemrograman II',
+          style: TextStyle(
+            fontFamily: 'Nusantara',
+            color: Colors.white54,
+            fontSize: isMobile ? 12 : 12,
+          ),
+        ),
+      ],
+    );
+
+    // Widget Gambar
+    Widget creatorImage = Container(
+      // Memberikan margin kanan hanya pada tampilan Web
+      margin: EdgeInsets.only(right: isMobile ? 0 : 20, bottom: isMobile ? 10 : 0),
+      child: Transform.translate(
+        // Offset vertikal direset ke nol (posisi diatur oleh margin di Column)
+        offset: const Offset(0,-30), 
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8.0),
+          child: Image.asset(
+            'assets/images/doyfrid.png', // <<< ASUMSI PATH GAMBAR DARI FILE UPLOADED
+            // Ukuran gambar kembali ke 180x180 (mempertahankan ukuran)
+            height: isMobile ? 100 : 180, 
+            width: isMobile ? 100 : 180,
+            fit: BoxFit.contain,
+          ),
+        ),
+      ),
+    );
+
 
     return Container(
       width: double.infinity,
@@ -236,7 +386,7 @@ class _IntroPageState extends State<IntroPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(height: topSpacing),
+          // SizedBox(height: topSpacing), // Dihapus untuk menghemat ruang vertikal
 
           Divider(
             color: isMobile ? Colors.white70 : Colors.white54,
@@ -244,94 +394,41 @@ class _IntroPageState extends State<IntroPage> {
             height: isMobile ? 16 : 35,
           ),
 
-          if (!isMobile)
-            SizedBox(
-              width: webContentMaxWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Tentang Pembuat',
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFFFFD700),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Dibuat oleh: Frida Debugging',
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Kontak: neosantara@idn.com',
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Alamat: UNPAM VIKTOR',
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.white54,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
+          // --- Konten Utama Footer (Gambar + Info) ---
+          
+          Container(
+            constraints: isMobile ? null : BoxConstraints(maxWidth: contentCardMaxWidth),
+            // KUNCI PERUBAHAN: Padding vertikal diperkecil dari 4 menjadi 2
+            padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.55),
+              borderRadius: BorderRadius.circular(14),
+              // Menghilangkan border
+              border: null, 
             ),
+            
+            child: !isMobile
+              ? IntrinsicHeight( // WEB VIEW
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    // crossAxisAlignment.start agar gambar dan teks sejajar rata atas
+                    crossAxisAlignment: CrossAxisAlignment.start, 
+                    children: [
+                      creatorImage, // Gambar di Kiri
+                      Expanded(child: creatorInfo), // Teks Info
+                    ],
+                  ),
+                )
+              : Column( // MOBILE VIEW (tetap rata tengah karena tampilan stack vertikal)
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    creatorImage, 
+                    creatorInfo,  
+                  ],
+                ),
+          ),
+          // --- Akhir Konten Utama Footer ---
 
-          if (isMobile)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Tentang Pembuat',
-                  style: TextStyle(
-                    fontFamily: 'Nusantara',
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFFFFD700),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Dibuat oleh: Frida Debugging',
-                  style: TextStyle(
-                    fontFamily: 'Nusantara',
-                    color: Colors.white,
-                    fontSize: 13,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Kontak: neosantara@idn.com',
-                  style: TextStyle(
-                    fontFamily: 'Nusantara',
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Alamat: UNPAM VIKTOR',
-                  style: TextStyle(
-                    fontFamily: 'Nusantara',
-                    color: Colors.white54,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
 
           const SizedBox(height: 12),
           const Divider(color: Colors.white24, thickness: 0.8),
@@ -409,7 +506,7 @@ class _IntroPageState extends State<IntroPage> {
                           ),
                           const Divider(color: Colors.white24, thickness: 0.8),
 
-                          // MENU HOME (MOBILE)
+                          // MENU HOME (MOBILE) - Sudah ada di Drawer
                           MenuButton(
                             text: "Home",
                             isDrawer: true,
@@ -424,29 +521,58 @@ class _IntroPageState extends State<IntroPage> {
                             onPressed: _navigateToMerchandise,
                           ),
 
-                          // Menu Sejarah Daerah (MOBILE)
+                          // Menu Sejarah Daerah (MOBILE) - Sudah ada di Drawer
                           SejarahDropdown(
                             regions: _regions,
                             onSelected: (region) {
-                              // SejarahDropdown sudah memanggil Navigator.pop(context) di _selectItem
                               _navigateToRegion(region);
                             },
                           ),
 
                           const Divider(color: Colors.white24, thickness: 0.8),
 
-                          // MENU LOGIN (MOBILE)
-                          MenuButton(
-                            text: "Login",
-                            isDrawer: true,
-                            onPressed: () {
-                              Navigator.pop(context);
-                              setState(() {
-                                showLogin = true;
-                              });
-                            },
-                          ),
-
+                          // >>> KONDISI LOGIN/KELUAR (MOBILE)
+                          if (!_isLoggedIn)
+                            // Jika BELUM login
+                            MenuButton(
+                              text: "LOGIN",
+                              isDrawer: true,
+                              onPressed: () {
+                                Navigator.pop(context);
+                                setState(() {
+                                  showLogin = true;
+                                });
+                              },
+                            )
+                          else
+                            // Jika SUDAH login: Tampilkan nama dan tombol KELUAR
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  child: Text(
+                                    'Halo, $_userName', // Tampilkan nama user
+                                    style: const TextStyle(
+                                      fontFamily: 'Nusantara',
+                                      color: Colors.amber,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                MenuButton(
+                                  text: "KELUAR",
+                                  isDrawer: true,
+                                  onPressed: () {
+                                    Navigator.pop(context); // Tutup drawer
+                                    _logout(); // Logout (menghapus status)
+                                  },
+                                ),
+                              ],
+                            ),
+                          // AKHIR KONDISI LOGIN/KELUAR (MOBILE) <<<
+                          
                           // MENU PROFIL BARU (MOBILE)
                           MenuButton(
                             text: "Profil",
@@ -467,25 +593,18 @@ class _IntroPageState extends State<IntroPage> {
 
       // === APPBAR ===
       appBar: AppBar(
-        // Menghilangkan tombol back/menu otomatis
         automaticallyImplyLeading: false,
-
-        // Latar Belakang Transparan di Web, Hitam di Mobile
         backgroundColor: isMobile ? Colors.black : Colors.transparent,
         elevation: isMobile ? 4 : 0,
 
         iconTheme: const IconThemeData(color: Colors.white, size: 30),
 
-        // --- LEADING BARU (Menggantikan Tombol Back/Drawer) ---
         leading: isMobile
             ? Builder(
                 builder: (context) {
                   return IconButton(
-                    // PERUBAHAN UTAMA: Mengganti Icons.home dengan Icons.menu (hamburger)
                     icon: const Icon(Icons.menu, color: Colors.white, size: 28),
                     onPressed: () {
-                      // Logika untuk membuka Drawer menggunakan Scaffold.of(context)
-                      // Builder ditambahkan untuk memastikan context dapat menemukan Scaffold
                       Scaffold.of(context).openDrawer();
                     },
                     tooltip: "Menu",
@@ -494,13 +613,11 @@ class _IntroPageState extends State<IntroPage> {
               )
             : null,
 
-        // --- AKHIR LEADING BARU ---
         titleSpacing: 0,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            // Jika bukan mobile, kita ingin ada sedikit padding
-            // di sebelah kiri logo (karena leading: null)
+            // --- BAGIAN KIRI (Logo & Nama Aplikasi) ---
             if (!isMobile) const SizedBox(width: 20),
 
             ClipRRect(
@@ -523,39 +640,61 @@ class _IntroPageState extends State<IntroPage> {
                 letterSpacing: 1.1,
               ),
             ),
+            
+            // --- SPACER 1: PUSHES MENU TO CENTER ---
+            const Spacer(), 
 
-            // Spacer di kiri (Opsional, untuk menengahkan)
-            if (!isMobile) const Spacer(),
-
-            // --- BAGIAN NAVIGASI UTAMA (WEB) ---
+            // >>> BAGIAN TENGAH (Menu Navigasi - Hanya Web) <<<
             if (!isMobile)
               Row(
+                mainAxisSize: MainAxisSize.min, // Agar Row hanya selebar kontennya
                 children: [
-                  // MENU HOME (WEB)
-                  MenuButton(text: "Home", onPressed: () {}),
+                  // 1. Home Button
+                  MenuButton(
+                    text: "Home",
+                    onPressed: () {}, // Sudah di IntroPage, tidak perlu navigasi
+                  ),
+                  const SizedBox(width: 8),
 
-                  // MENU MERCHANDISE (WEB)
+                  // 2. Merchandise Button
                   MenuButton(
                     text: "Merchandise",
                     onPressed: _navigateToMerchandise,
                   ),
+                  const SizedBox(width: 8),
 
-                  // Menu Sejarah Daerah (WEB)
+                  // 3. Sejarah Dropdown
                   SejarahDropdown(
                     regions: _regions,
                     onSelected: _navigateToRegion,
                   ),
                 ],
               ),
-
-            // Spacer di tengah untuk memisahkan navigasi utama dan aksi user
-            const Spacer(),
-
-            // --- BAGIAN AKSI/USER (WEB) ---
+            
+            // --- SPACER 2: PUSHES USER ACTIONS TO RIGHT ---
+            const Spacer(), 
+            
+            // >>> BAGIAN KANAN (Aksi Pengguna - Hanya Web) <<<
             if (!isMobile)
               Row(
+                mainAxisSize: MainAxisSize.min, // Agar Row hanya selebar kontennya
                 children: [
-                  // 1. ICON PROFIL BARU
+                  // Nama User (Hanya tampil jika sudah login)
+                  if (_isLoggedIn)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: Text(
+                        'Halo, $_userName', 
+                        style: const TextStyle(
+                          fontFamily: 'Nusantara',
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    
+                  // 1. ICON PROFIL
                   IconButton(
                     icon: const Icon(
                       Icons.person,
@@ -566,17 +705,27 @@ class _IntroPageState extends State<IntroPage> {
                     tooltip: "Profil User",
                   ),
 
-                  // 2. MENU LOGIN
-                  MenuButton(
-                    text: "Login",
-                    onPressed: () {
-                      setState(() {
-                        showLogin = true;
-                      });
-                    },
-                  ),
+                  // 2. MENU LOGIN / KELUAR (Kondisional)
+                  if (!_isLoggedIn)
+                    // Jika BELUM login
+                    MenuButton(
+                      text: "LOGIN",
+                      onPressed: () {
+                        setState(() {
+                          showLogin = true;
+                        });
+                      },
+                    )
+                  else
+                    // Jika SUDAH login
+                    MenuButton(
+                      text: "KELUAR",
+                      onPressed: _logout, // Panggil fungsi logout
+                    ),
+                  const SizedBox(width: 20), // Padding di paling kanan
                 ],
               ),
+            // AKHIR KONDISI MENU WEB <<<
           ],
         ),
       ),
@@ -674,10 +823,13 @@ class _IntroPageState extends State<IntroPage> {
           // === LOGIN OVERLAY ===
           if (showLogin)
             LoginPage(
-              onClose: () {
+              // PENTING: Panggil _checkLoginStatus() setelah modal ditutup
+              onClose: () async { 
                 setState(() {
                   showLogin = false;
                 });
+                // FIX: Menghapus 'await' pada baris 744 untuk mengatasi 'void expression' error
+                _checkLoginStatus(); 
               },
             ),
         ],
