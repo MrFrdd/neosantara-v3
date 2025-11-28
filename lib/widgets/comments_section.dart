@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http; // PENTING: Import HTTP
-import 'dart:convert'; // PENTING: Import untuk JSON
-import 'package:shared_preferences/shared_preferences.dart'; // Untuk data user
+import 'package:http/http.dart' as http;
+import 'dart:convert'; 
+import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:intl/intl.dart'; 
 
 class CommentsSection extends StatefulWidget {
   final bool isMobile;
   final double horizontalPadding;
-  final String contentId; // ID konten yang dikomentari (Wajib)
+  final String contentId; 
 
   const CommentsSection({
     super.key,
@@ -16,24 +17,35 @@ class CommentsSection extends StatefulWidget {
   });
 
   @override
-  State<CommentsSection> createState() => _CommentsSectionState();
+  State<CommentsSection> createState() => CommentsSectionState();
 }
 
-class _CommentsSectionState extends State<CommentsSection> {
+class CommentsSectionState extends State<CommentsSection> {
   final TextEditingController _commentController = TextEditingController();
   List<Map<String, dynamic>> _comments = [];
   bool _isLoading = true;
   String _userName = 'Guest'; 
-  String _userId = '';
+  String _userId = ''; // ID Pengguna yang sedang login
 
-  // GANTI URL INI DENGAN ENDPOINT PHP ANDA YANG SEBENARNYA!
-  final String _apiUrl = 'http://localhost/komentar.php/'; 
+  // GANTI URL INI DENGAN IP/DOMAIN API ANDA YANG TEPAT!
+  final String _baseUrl = 'http://localhost/flutter_budaya_api/'; // Sesuaikan jika perlu
+  String get _apiUrl => '${_baseUrl}comments_api.php'; 
+  String get _deleteApiUrl => '${_baseUrl}delete_comment.php'; 
+  // =========================================================
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
-    _fetchComments();
+    // Memuat data user dan komentar saat pertama kali diinisialisasi
+    _loadUserData().then((_) {
+      if (widget.contentId.isNotEmpty) {
+        _fetchComments();
+      } else {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    });
   }
 
   @override
@@ -41,25 +53,30 @@ class _CommentsSectionState extends State<CommentsSection> {
     _commentController.dispose();
     super.dispose();
   }
+  
+  // ==================== A. Logika Data User ====================
 
-  // --- FUNGSI UTILITY API ---
+  /// KRITIS: Metode publik untuk dipanggil dari halaman luar (JakartaPage)
+  /// Memastikan _userId di-refresh setelah login atau logout.
+  void loadComments() async {
+    await _loadUserData(); 
+    _fetchComments();
+  }
 
-  // 1. Ambil data user dari SharedPreferences
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    // Ambil user_id juga (sesuai profil_page.dart)
-    final savedId = prefs.getString('user_id') ?? ''; 
-    final savedName = prefs.getString('user_name') ?? 'Guest User';
-    
+    // Gunakan setState hanya jika widget masih terpasang (mounted)
     if (mounted) {
       setState(() {
-        _userName = savedName;
-        _userId = savedId;
+        _userName = prefs.getString('user_name') ?? 'Guest';
+        // Jika user log out, nilai _userId akan menjadi string kosong.
+        _userId = prefs.getString('user_id') ?? ''; 
       });
     }
   }
+  
+  // ==================== B. Logika Ambil Komentar (GET) ====================
 
-  // 2. Ambil Komentar dari API (Menggunakan GET)
   Future<void> _fetchComments() async {
     if (!mounted) return;
     setState(() {
@@ -67,42 +84,29 @@ class _CommentsSectionState extends State<CommentsSection> {
     });
 
     try {
-      // Mengirim content_id sebagai query parameter
-      final uri = Uri.parse('$_apiUrl?content_id=${widget.contentId}');
-      final response = await http.get(uri);
+      final response = await http.get(
+        Uri.parse('$_apiUrl?content_id=${widget.contentId}'),
+      );
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
-        // Karena PHP mengembalikan array of comments, langsung di-decode
-        final List<dynamic> fetchedComments = json.decode(response.body);
-        
-        if (mounted) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success') {
           setState(() {
-            _comments = fetchedComments.cast<Map<String, dynamic>>();
+            _comments = List<Map<String, dynamic>>.from(data['comments']);
+          });
+        } else {
+           _showSnackBar(data['message'] ?? 'Gagal mengambil komentar', Colors.orange);
+           setState(() {
+            _comments = []; // Kosongkan daftar jika gagal
           });
         }
       } else {
-        // Jika server mengembalikan error (misal 400 atau 500)
-        final errorBody = json.decode(response.body);
-        final errorMessage = errorBody['message'] ?? 'Gagal memuat komentar.';
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error ${response.statusCode}: $errorMessage'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        _showSnackBar('Gagal terhubung ke API (Status: ${response.statusCode})', Colors.red);
       }
     } catch (e) {
-      // Error koneksi
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error koneksi server. Pastikan API berjalan: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      _showSnackBar('Terjadi error jaringan: $e', Colors.red);
     } finally {
       if (mounted) {
         setState(() {
@@ -112,131 +116,180 @@ class _CommentsSectionState extends State<CommentsSection> {
     }
   }
 
-  // 3. Kirim Komentar ke API (Menggunakan POST)
+  // ==================== C. Logika Kirim Komentar (POST) ====================
+
   Future<void> _postComment() async {
-    final commentText = _commentController.text.trim();
-    if (commentText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Komentar tidak boleh kosong.'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+    if (_commentController.text.trim().isEmpty) {
+      _showSnackBar('Komentar tidak boleh kosong.', Colors.orange);
       return;
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("Mengirim komentar..."),
-            backgroundColor: Colors.blueAccent,
-            duration: Duration(seconds: 1),
-        ),
-    );
+    // KRITIS: Jika _userId kosong (belum login), hentikan proses
+    if (_userId.isEmpty) { 
+       _showSnackBar('Anda harus masuk untuk berkomentar.', Colors.red);
+       return;
+    }
+    
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+    });
 
     try {
       final response = await http.post(
         Uri.parse(_apiUrl),
-        headers: {'Content-Type': 'application/json'},
-        // Body dikirim sebagai JSON, sesuai dengan penanganan di komentar.php
-        body: json.encode({
+        body: {
           'content_id': widget.contentId,
-          'user': _userName, 
-          'id_user': _userId, // Opsional
-          'comment': commentText,
-        }),
+          'id_user': _userId, 
+          'user_name': _userName, 
+          'comment_text': _commentController.text.trim(),
+        },
       );
+      
+      if (!mounted) return;
 
-      // Cek apakah response berhasil (201 Created atau 200 OK)
-      if (response.statusCode == 201 || response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['status'] == 'success') {
         _commentController.clear();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Komentar berhasil dikirim!"),
-            backgroundColor: Colors.green,
-          ),
-        );
-        _fetchComments(); // Muat ulang komentar
+        _showSnackBar('Komentar berhasil dikirim!', Colors.green);
+        loadComments(); // Refresh komentar
       } else {
-         // Jika server mengembalikan error
-        final errorBody = json.decode(response.body);
-        final errorMessage = errorBody['message'] ?? 'Gagal mengirim komentar.';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error ${response.statusCode}: $errorMessage'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showSnackBar(data['message'] ?? 'Gagal mengirim komentar.', Colors.red);
       }
     } catch (e) {
+      _showSnackBar('Terjadi error jaringan saat mengirim: $e', Colors.red);
+    } finally {
+      if (mounted) {
+       setState(() {
+         _isLoading = false;
+       });
+      }
+    }
+  }
+
+  // ==================== D. Logika Hapus Komentar ====================
+
+  Future<void> _deleteComment(String commentId) async {
+    // KRITIS: Jika _userId kosong (belum login), hentikan proses
+    if (_userId.isEmpty) { 
+       _showSnackBar('Anda harus masuk untuk menghapus komentar.', Colors.red);
+       return;
+    }
+    
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final response = await http.post(
+        Uri.parse(_deleteApiUrl),
+        body: {
+          'id_comment': commentId,
+          'id_user': _userId, // Verifikasi di backend bahwa user yang menghapus adalah pemiliknya
+        },
+      );
+
+      if (!mounted) return;
+
+      final data = json.decode(response.body);
+      if (data['status'] == 'success') {
+        _showSnackBar('Komentar berhasil dihapus!', Colors.green);
+        loadComments(); // Refresh komentar
+      } else {
+        _showSnackBar(data['message'] ?? 'Gagal menghapus komentar.', Colors.red);
+      }
+    } catch (e) {
+      _showSnackBar('Terjadi error jaringan saat menghapus: $e', Colors.red);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  // ==================== E. Widget Pembantu ====================
+
+  void _showSnackBar(String message, Color color) {
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error koneksi saat kirim komentar: $e'),
-          backgroundColor: Colors.red,
+          content: Text(message),
+          backgroundColor: color,
         ),
       );
     }
   }
-  
-  // --- FUNGSI WIDGET HELPER ---
 
   Widget _buildComment(Map<String, dynamic> data) {
-    final user = data['user'] as String? ?? 'Anonim';
-    final comment = data['comment'] as String? ?? 'Tidak ada teks.';
-    final color = user == _userName ? Colors.amber : Colors.cyanAccent;
+    final DateTime dateTime = DateTime.parse(data['created_at']);
+    final String formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(dateTime.toLocal());
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white12, 
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white10),
-      ),
+    // KRITIS: Hanya muncul jika ID user yang melihat sama dengan ID user pemilik komen DAN user sedang login (_userId tidak kosong)
+    final bool isUserComment = _userId.isNotEmpty && data['id_user'].toString() == _userId; 
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            user,
-            style: TextStyle(
-              fontFamily: 'Nusantara',
-              fontWeight: FontWeight.bold,
-              color: color,
-              fontSize: 14,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                data['user_name'] ?? 'Pengguna',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+              // Tombol delete hanya muncul jika isUserComment
+              if (isUserComment)
+                InkWell(
+                  onTap: _isLoading ? null : () => _deleteComment(data['id_comment'].toString()),
+                  child: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.redAccent,
+                    size: 18,
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
           Text(
-            comment,
-            style: const TextStyle(
-              fontFamily: 'Nusantara',
-              color: Colors.white70,
-              fontSize: 16,
-              height: 1.4,
-            ),
+            data['comment_text'] ?? 'Tidak ada komentar.',
+            style: const TextStyle(color: Colors.white70),
           ),
+          const SizedBox(height: 4),
+          Text(
+            formattedDate,
+            style: const TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+          const Divider(color: Colors.white12, height: 24),
         ],
       ),
     );
   }
 
+  // ==================== F. Widget Build Utama ====================
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: widget.horizontalPadding,
-        vertical: 20,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Komentar",
+          // Header
+          const Text(
+            "Komentar & Diskusi",
             style: TextStyle(
               fontFamily: 'Nusantara',
-              color: Colors.white,
-              fontSize: widget.isMobile ? 24 : 28,
+              fontSize: 24,
               fontWeight: FontWeight.bold,
-              letterSpacing: 1.2,
+              color: Color(0xFFFFCC00),
             ),
           ),
           const SizedBox(height: 20),
@@ -248,34 +301,34 @@ class _CommentsSectionState extends State<CommentsSection> {
               Expanded(
                 child: TextField(
                   controller: _commentController,
-                  maxLines: null, 
-                  minLines: 1,
                   keyboardType: TextInputType.multiline,
-                  style: const TextStyle(color: Colors.white),
+                  maxLines: null,
+                  // KRITIS: Menonaktifkan input jika user belum login
+                  enabled: _userId.isNotEmpty && !_isLoading, 
                   decoration: InputDecoration(
-                    hintText: 'Tulis komentar Anda di sini sebagai $_userName...',
-                    hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                    hintText: _userId.isEmpty 
+                        ? 'Masuk untuk menulis komentar...' // Pesan saat logout
+                        : 'Tulis komentar Anda di sini...', // Pesan saat login
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    enabledBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.white30),
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: Colors.amber),
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    fillColor: Colors.black87,
                   ),
+                  style: const TextStyle(color: Colors.white),
+                  cursorColor: Colors.amber,
                 ),
               ),
               const SizedBox(width: 10),
-              
-              // Tombol Kirim
               Container(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                   gradient: const LinearGradient(
                     colors: [Color(0xFFFFCC00), Color(0xFFFF9900)],
                     begin: Alignment.topLeft,
@@ -291,7 +344,8 @@ class _CommentsSectionState extends State<CommentsSection> {
                 ),
                 child: IconButton(
                   icon: const Icon(Icons.send, color: Colors.black),
-                  onPressed: _postComment, // Panggil fungsi kirim API
+                  // KRITIS: Menonaktifkan tombol jika user belum login
+                  onPressed: (_isLoading || _userId.isEmpty) ? null : _postComment, 
                   tooltip: 'Kirim Komentar',
                 ),
               ),
@@ -313,7 +367,6 @@ class _CommentsSectionState extends State<CommentsSection> {
               style: TextStyle(color: Colors.white70),
             )
           else
-            // Mapping data API ke widget komentar
             ..._comments.map((data) => _buildComment(data)).toList(),
         ],
       ),

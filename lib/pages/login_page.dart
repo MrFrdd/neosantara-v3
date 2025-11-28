@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart'; // <<< PENTING: Import SharedPreferences
+import 'package:shared_preferences/shared_preferences.dart'; 
 
 class LoginPage extends StatefulWidget {
   final VoidCallback onClose;
 
+  // FIX ERROR: Menghapus duplikasi 'required'
   const LoginPage({super.key, required this.onClose});
 
   @override
@@ -16,37 +17,40 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   bool isLogin = true;
-  bool _obscurePassword = true;
-  bool _isLoading = false; // Variabel untuk indikator loading
+  bool _obscurePassword = true; 
+  bool _isLoading = false; 
 
-  // Controller untuk field
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _namaController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController(); 
+  final TextEditingController _namaController = TextEditingController(); 
+  final TextEditingController _passwordController = TextEditingController(); 
+  final TextEditingController _phoneController = TextEditingController(); 
+  final TextEditingController _addressController = TextEditingController();
 
-  // Status error tiap field
-  bool _emailError = false;
-  bool _namaError = false;
-  bool _passwordError = false;
+  bool _emailError = false; 
+  bool _namaError = false; 
+  bool _passwordError = false; 
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _namaController.dispose();
-    _passwordController.dispose();
+    _emailController.dispose(); 
+    _namaController.dispose(); 
+    _passwordController.dispose(); 
+    _phoneController.dispose();
+    _addressController.dispose();
     super.dispose();
   }
 
   // === Fungsi Validasi Email ===
   bool _isValidEmail(String email) {
-    return email.contains('@');
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    return emailRegex.hasMatch(email);
   }
 
   // === Fungsi Validasi Semua Field dan API Call ===
   Future<void> _handleSubmit() async {
     if (!mounted || _isLoading) return;
 
-    // --- (1) Validasi Input Lokal ---
+    // --- (1) Logika Validasi Input Lokal ---
     setState(() {
       _emailError = _emailController.text.trim().isEmpty;
       _passwordError = _passwordController.text.trim().isEmpty;
@@ -67,7 +71,7 @@ class _LoginPageState extends State<LoginPage> {
     if (!_isValidEmail(_emailController.text.trim())) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Email tidak valid! Harus mengandung simbol "@"'),
+          content: Text('Format email tidak valid!'),
           backgroundColor: Colors.redAccent,
           duration: Duration(seconds: 2),
         ),
@@ -75,25 +79,27 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _emailError = true);
       return;
     }
+    // --- (1) End ---
 
     // --- (2) Setup API Call ---
-    setState(() => _isLoading = true); // Mulai loading
+    setState(() => _isLoading = true); 
 
-    // GANTI 'http://10.0.2.2' dengan alamat IP lokal Anda jika menggunakan perangkat fisik
     const String baseUrl = 'http://localhost/flutter_budaya_api/'; 
     final String endpoint = isLogin
-        ? '${baseUrl}login.php'
-        : '${baseUrl}register.php';
+        ? '${baseUrl}login.php' 
+        : '${baseUrl}register.php'; 
     
     final Map<String, String> data = isLogin
         ? {
-            'email': _emailController.text.trim(),
-            'kata_sandi': _passwordController.text.trim(),
+            'email': _emailController.text.trim(), 
+            'kata_sandi': _passwordController.text.trim(), 
           }
         : {
             'email': _emailController.text.trim(),
             'nama_lengkap': _namaController.text.trim(),
             'kata_sandi': _passwordController.text.trim(),
+            'no_telepon': _phoneController.text.trim(),
+            'alamat': _addressController.text.trim(),
           };
 
     try {
@@ -102,7 +108,7 @@ class _LoginPageState extends State<LoginPage> {
         body: data,
       );
 
-      if (!mounted) return;
+      if (!mounted) return; // Pengecekan mounted setelah await
 
       // --- (3) Penanganan Respons API ---
       if (response.statusCode == 200) {
@@ -110,20 +116,19 @@ class _LoginPageState extends State<LoginPage> {
 
         if (responseData['status'] == 'success') {
           
-          // >>> START: LOGIKA PENYIMPANAN DATA PROFIL
-          final prefs = await SharedPreferences.getInstance();
+          final prefs = await SharedPreferences.getInstance(); 
           
           if (responseData['data'] != null) {
               final userData = responseData['data'];
-              // Simpan data user ke SharedPreferences
-              prefs.setString('user_id', userData['id_user'].toString());
-              prefs.setString('user_name', userData['nama_lengkap']);
-              prefs.setString('user_email', userData['email']);
-              prefs.setBool('is_logged_in', true); // Penanda status login
+              // Simpan data user ke SharedPreferences (KRITIS UNTUK KOMENTAR)
+              prefs.setString('user_id', userData['id_user'].toString()); 
+              prefs.setString('user_name', userData['nama_lengkap']); 
+              prefs.setString('user_email', userData['email']); 
+              prefs.setString('user_phone', userData['no_telepon'] ?? ''); 
+              prefs.setString('user_address', userData['alamat'] ?? '');
+              prefs.setBool('is_logged_in', true); 
           }
-          // <<< END: LOGIKA PENYIMPANAN DATA PROFIL
           
-          // Tampilkan pesan sukses
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(responseData['message'] ?? 'Berhasil!'),
@@ -132,11 +137,9 @@ class _LoginPageState extends State<LoginPage> {
             ),
           );
 
-          // Tutup modal setelah sukses
-          widget.onClose();
+          widget.onClose(); 
           
         } else {
-          // Kasus gagal dari server (misal: email sudah terdaftar/password salah)
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(responseData['message'] ?? 'Gagal!'),
@@ -146,7 +149,6 @@ class _LoginPageState extends State<LoginPage> {
           );
         }
       } else {
-        // Kasus kegagalan HTTP/Server error (e.g., 500)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Gagal terhubung ke server. Status: ${response.statusCode}'),
@@ -156,7 +158,6 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     } catch (e) {
-      // Kasus error jaringan atau server tidak dapat dijangkau
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -166,15 +167,13 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } finally {
-      // --- (4) Selesai Loading ---
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() => _isLoading = false); 
       }
     }
   }
 
-
-  // === Widget untuk Field Input ===
+  // === Widget _buildTextField ===
   Widget _buildTextField({
     required TextEditingController controller,
     required String labelText,
@@ -182,6 +181,8 @@ class _LoginPageState extends State<LoginPage> {
     required TextInputAction textInputAction,
     bool isPassword = false,
     bool isVisible = true,
+    TextInputType keyboardType = TextInputType.text,
+    int maxLines = 1,
   }) {
     if (!isVisible) return const SizedBox.shrink();
 
@@ -194,8 +195,10 @@ class _LoginPageState extends State<LoginPage> {
           if (labelText == 'Nama Lengkap') _namaError = false;
           if (labelText == 'Kata Sandi') _passwordError = false;
         }),
-        obscureText: isPassword ? _obscurePassword : false,
+        obscureText: isPassword ? _obscurePassword : false, 
         textInputAction: textInputAction,
+        keyboardType: keyboardType, 
+        maxLines: maxLines, 
         decoration: InputDecoration(
           labelText: labelText,
           labelStyle: const TextStyle(fontFamily: 'Nusantara'),
@@ -227,6 +230,7 @@ class _LoginPageState extends State<LoginPage> {
                 )
               : null,
         ),
+        style: const TextStyle(fontFamily: 'Nusantara'),
       ),
     );
   }
@@ -235,17 +239,13 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
 
-    // === Definisikan shortcut keyboard ===
     final Map<ShortcutActivator, VoidCallback> shortcuts = {
-      // Tombol Enter untuk submit
       const SingleActivator(LogicalKeyboardKey.enter): _isLoading ? () {} : _handleSubmit, 
-      // Tombol Escape untuk menutup modal
       const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
     };
 
     return Stack(
       children: [
-        // === Efek Blur Background & Penutup Modal di luar area ===
         Positioned.fill(
           child: GestureDetector(
             onTap: widget.onClose,
@@ -255,163 +255,170 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
-
-        // === Konten Login / Register dengan Keyboard Shortcuts ===
         Center(
           child: CallbackShortcuts(
-            bindings: shortcuts,
+            bindings: shortcuts, 
             child: Focus(
               autofocus: true,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   vertical: 40.0,
                 ),
-                child: Container(
-                  width: screenWidth * 0.85,
-                  constraints: const BoxConstraints(maxWidth: 380),
-                  padding: const EdgeInsets.all(22),
-                  margin: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.95),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // === JUDUL ===
-                      Text(
-                        isLogin ? 'Masuk ke NeoSantara' : 'Daftar Akun Baru',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Nusantara',
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-
-                      // === FIELD EMAIL ===
-                      _buildTextField(
-                        controller: _emailController,
-                        labelText: 'Email',
-                        isError: _emailError,
-                        textInputAction: TextInputAction.next,
-                      ),
-
-                      // === FIELD NAMA (JIKA DAFTAR) ===
-                      _buildTextField(
-                        controller: _namaController,
-                        labelText: 'Nama Lengkap',
-                        isError: _namaError,
-                        textInputAction: TextInputAction.next,
-                        isVisible: !isLogin,
-                      ),
-
-                      // === FIELD PASSWORD ===
-                      _buildTextField(
-                        controller: _passwordController,
-                        labelText: 'Kata Sandi',
-                        isError: _passwordError,
-                        textInputAction: TextInputAction.done,
-                        isPassword: true,
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // === TOMBOL LOGIN / DAFTAR ===
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber[700],
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(double.infinity, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                child: Material(
+                  color: Colors.white.withOpacity(0.95),
+                  borderRadius: BorderRadius.circular(20),
+                  elevation: 10,
+                  child: Container(
+                    width: screenWidth * 0.85,
+                    constraints: const BoxConstraints(maxWidth: 380),
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          isLogin ? 'Masuk ke NeoSantara' : 'Daftar Akun Baru',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Nusantara',
+                            color: Colors.black87,
                           ),
                         ),
-                        // DISABLED jika sedang loading
-                        onPressed: _isLoading ? null : _handleSubmit, 
-                        child: _isLoading // Tampilkan indikator loading atau teks
-                            ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 3,
-                                ),
-                              )
-                            : Text(
-                                isLogin ? 'MASUK' : 'DAFTAR',
-                                style: const TextStyle(
-                                  fontFamily: 'Nusantara',
-                                  fontSize: 18,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                      ),
+                        const SizedBox(height: 18),
 
-                      const SizedBox(height: 15),
+                        _buildTextField(
+                          controller: _emailController, 
+                          labelText: 'Email', 
+                          isError: _emailError, 
+                          textInputAction: TextInputAction.next, 
+                        ),
 
-                      // === TOGGLE LOGIN / DAFTAR ===
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        children: [
-                          Text(
-                            isLogin
-                                ? 'Belum punya akun? '
-                                : 'Sudah punya akun? ',
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontFamily: 'Nusantara',
-                              fontSize: 14,
+                        _buildTextField(
+                          controller: _namaController, 
+                          labelText: 'Nama Lengkap', 
+                          isError: _namaError, 
+                          textInputAction: TextInputAction.next, 
+                          isVisible: !isLogin, 
+                        ),
+                        
+                        _buildTextField(
+                          controller: _phoneController,
+                          labelText: 'No Telepon',
+                          isError: false, 
+                          textInputAction: TextInputAction.next,
+                          isVisible: !isLogin,
+                          keyboardType: TextInputType.phone, 
+                        ),
+                        
+                        _buildTextField(
+                          controller: _addressController,
+                          labelText: 'Alamat',
+                          isError: false, 
+                          textInputAction: TextInputAction.next,
+                          isVisible: !isLogin,
+                          maxLines: 3, 
+                        ),
+
+                        _buildTextField(
+                          controller: _passwordController, 
+                          labelText: 'Kata Sandi', 
+                          isError: _passwordError, 
+                          textInputAction: TextInputAction.done, 
+                          isPassword: true, 
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // === TOMBOL LOGIN / DAFTAR ===
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber[700], 
+                            foregroundColor: Colors.white, 
+                            minimumSize: const Size(double.infinity, 50), 
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10), 
                             ),
                           ),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                // Reset state saat toggle
-                                _emailController.clear();
-                                _namaController.clear();
-                                _passwordController.clear();
-                                isLogin = !isLogin;
-                                _emailError = _passwordError = _namaError =
-                                    false;
-                              });
-                            },
-                            child: Text(
-                              isLogin ? 'Daftar sekarang' : 'Masuk di sini',
+                          onPressed: _isLoading ? null : _handleSubmit, 
+                          child: _isLoading 
+                              ? const SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                  ),
+                                )
+                              : Text(
+                                  isLogin ? 'MASUK' : 'DAFTAR', 
+                                  style: const TextStyle(
+                                    fontFamily: 'Nusantara',
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        // === TOGGLE LOGIN / DAFTAR ===
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          children: [
+                            Text(
+                              isLogin
+                                  ? 'Belum punya akun? '
+                                  : 'Sudah punya akun? ',
                               style: const TextStyle(
-                                color: Colors.blueAccent,
+                                color: Colors.black87,
                                 fontFamily: 'Nusantara',
                                 fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                decoration: TextDecoration.underline,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 10),
-
-                      // === TOMBOL CLOSE ===
-                      IconButton(
-                        icon: const Icon(
-                          Icons.close,
-                          color: Colors.redAccent,
-                          size: 28,
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _emailController.clear();
+                                  _namaController.clear();
+                                  _passwordController.clear();
+                                  _phoneController.clear();
+                                  _addressController.clear();
+                                  isLogin = !isLogin;
+                                  _emailError = _passwordError = _namaError = false;
+                                });
+                              },
+                              child: Text(
+                                isLogin ? 'Daftar sekarang' : 'Masuk di sini',
+                                style: const TextStyle(
+                                  color: Colors.blueAccent,
+                                  fontFamily: 'Nusantara',
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        onPressed: widget.onClose,
-                      ),
-                    ],
+
+                        const SizedBox(height: 10),
+
+                        // === TOMBOL CLOSE ===
+                        IconButton(
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.redAccent,
+                            size: 28,
+                          ),
+                          onPressed: widget.onClose, 
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

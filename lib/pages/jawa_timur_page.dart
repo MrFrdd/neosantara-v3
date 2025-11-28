@@ -1,28 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // BARU: Untuk cek status login
 // Asumsi Anda memiliki IntroPage di path yang sama atau relatif
 import 'intro_page.dart';
 
-// Import halaman-halaman tujuan yang lain:
-// PASTIKAN FILE-FILE INI ADA DI FOLDER YANG SAMA!
+// Import halaman-halaman dan widget tujuan yang lain:
+import '../widgets/comments_section.dart'; // BARU: Komponen komentar modular
 import 'jakarta_page.dart';
 import 'jawa_tengah_page.dart';
 import 'jawa_barat_page.dart';
 import 'bali_page.dart';
 import 'merchandise_page.dart';
-import 'profil_page.dart';
+import 'profil_page.dart'; // BARU: Halaman Profil
+import 'login_page.dart'; // BARU: Halaman Login
 
-// --- Model dan Data Tiruan ---
-
-// Model untuk data komentar tiruan
-class Comment {
-  final String user;
-  final String date;
-  final String content;
-  Comment(this.user, this.date, this.content);
-}
-
-// Data komentar tiruan untuk halaman Jawa Timur
-final List<Comment> mockCommentsJawaTimur = [];
+// --- Model dan Data Tiruan (Dihapus karena diganti CommentsSection) ---
 
 // --- Halaman JawaTimurPage (StatefulWidget) ---
 
@@ -34,19 +25,41 @@ class JawaTimurPage extends StatefulWidget {
 }
 
 class _JawaTimurPageState extends State<JawaTimurPage> {
-  // Controller untuk mengelola input komentar
+  // Status login
+  bool _isLoggedIn = false; 
+  
+  // KUNCI KRITIS: Untuk mengakses State dari CommentsSection dan memanggil refresh.
+  final GlobalKey<CommentsSectionState> _commentsSectionKey = GlobalKey<CommentsSectionState>();
+
+  // Controller untuk mengelola input komentar (Dipertahankan karena mungkin digunakan di tempat lain)
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _commentController = TextEditingController();
 
   // Map untuk menentukan rute halaman target
-  // Dihapus: 'Merchandise' dari list ini karena hanya diakses melalui AppBar.actions
   final Map<String, Widget> pageRoutes = {
     'Jakarta': const JakartaPage(),
+    'Jawa Timur': const JawaTimurPage(), // Diperlukan untuk navigasi pushReplacement di Drawer
     'Jawa Tengah': const JawaTengahPage(),
     'Jawa Barat': const JawaBaratPage(),
     'Bali': const BaliPage(),
     'Profil': const ProfilPage(), 
   };
+  
+  // Fungsi untuk memeriksa status login dari SharedPreferences
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = prefs.getBool('is_logged_in') ?? false; 
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus(); // Cek status saat halaman dimuat
+  }
 
   @override
   void dispose() {
@@ -92,201 +105,7 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
     );
   }
 
-  // Widget untuk menampilkan Kolom Komentar
-  Widget _buildCommentSection({required bool isMobile}) {
-    // Logika Mock KIRIM Komentar (Menggunakan mockCommentsJawaTimur)
-    void _submitComment() {
-      final name = _nameController.text.trim();
-      final content = _commentController.text.trim();
-
-      if (name.isNotEmpty && content.isNotEmpty) {
-        // Tambahkan komentar ke list global Jawa Timur
-        setState(() {
-          mockCommentsJawaTimur.add(Comment(name, "Baru saja", content));
-        });
-        _nameController.clear();
-        _commentController.clear();
-        // Tampilkan Snackbar konfirmasi
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Komentar berhasil ditambahkan (Mock).',
-                  style: TextStyle(fontFamily: 'Nusantara'))),
-        );
-      } else {
-        // Tampilkan Snackbar jika input kosong
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Nama dan komentar tidak boleh kosong.',
-                  style: TextStyle(fontFamily: 'Nusantara'))),
-        );
-      }
-    }
-
-    // List Komentar yang akan di-build
-    final commentList = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: mockCommentsJawaTimur.isEmpty
-          ? [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20.0),
-                child: Center(
-                  child: Text(
-                    "Belum ada komentar. Jadilah yang pertama berkomentar!",
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.grey.shade400,
-                      fontSize: isMobile ? 16 : 18,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              )
-            ]
-          : mockCommentsJawaTimur.reversed.map((comment) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          comment.user,
-                          style: TextStyle(
-                            fontFamily: 'Nusantara',
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: isMobile ? 16 : 18,
-                          ),
-                        ),
-                        Text(
-                          comment.date,
-                          style: TextStyle(
-                            fontFamily: 'Nusantara',
-                            color: Colors.grey.shade400,
-                            fontSize: isMobile ? 12 : 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      comment.content,
-                      textAlign: TextAlign.justify,
-                      style: TextStyle(
-                        fontFamily: 'Nusantara',
-                        color: Colors.white70,
-                        fontSize: isMobile ? 15 : 16,
-                        height: 1.5,
-                      ),
-                    ),
-                    const Divider(
-                        color: Colors.white12, height: 10, thickness: 0.5),
-                  ],
-                ),
-              );
-            }).toList(),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Title Komentar
-        Text(
-          "Kolom Komentar",
-          style: TextStyle(
-            fontFamily: 'Nusantara',
-            fontSize: isMobile ? 22 : 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.amber,
-          ),
-        ),
-        const SizedBox(height: 25),
-
-        // Comment Input Form
-        Container(
-          padding: const EdgeInsets.all(15),
-          margin: const EdgeInsets.only(bottom: 40),
-          decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.4),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.amber.withOpacity(0.5)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ]),
-          child: Column(
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  hintText: "Nama Anda",
-                  hintStyle: TextStyle(
-                      color: Colors.grey.shade500, fontFamily: 'Nusantara'),
-                  filled: true,
-                  fillColor: Colors.black.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                ),
-                style: const TextStyle(color: Colors.white, fontFamily: 'Nusantara'),
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: _commentController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: "Tulis komentar Anda di sini...",
-                  hintStyle: TextStyle(
-                      color: Colors.grey.shade500, fontFamily: 'Nusantara'),
-                  filled: true,
-                  fillColor: Colors.black.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                ),
-                style: const TextStyle(color: Colors.white, fontFamily: 'Nusantara'),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submitComment,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    "Kirim Komentar",
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Daftar Komentar Tiruan
-        commentList,
-      ],
-    );
-  }
+  // Logika _buildCommentSection DIHAPUS karena digantikan CommentsSection eksternal
 
   // Widget untuk membuat menu drawer (menu strip 3)
   Widget _buildAppDrawer(BuildContext context, bool isMobile) {
@@ -305,11 +124,13 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
         );
       } else if (pageRoutes.containsKey(destination)) {
         Widget nextPage = pageRoutes[destination]!;
+        // PUSH REPLACEMENT untuk navigasi antar halaman utama
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => nextPage),
         );
       }
+      // Navigasi ke Merchandise atau Profil tidak perlu di sini
     }
 
     // Daftar menu Sejarah Daerah
@@ -337,7 +158,7 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
               ),
               child: Stack(
                 children: [
-                  // Gambar Background Header (Menggunakan gambar Bromo sebagai placeholder)
+                  // Gambar Background Header (Menggunakan gambar Jatim sebagai placeholder)
                   Positioned.fill(
                     child: Image.asset(
                       'assets/images/jatim.jpg',
@@ -452,25 +273,6 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
           ),
 
           const Divider(color: Colors.white12),
-          
-          // === Menu Merchandise DITAMBAHKAN SEBELUMNYA, KINI DIHAPUS ===
-          /* ListTile(
-            leading: const Icon(Icons.shopping_bag, color: iconColor),
-            title: const Text('Merchandise',
-                style: TextStyle(
-                    fontFamily: 'Nusantara', color: listTileColor, fontSize: 18)),
-            // Menggunakan push, bukan pushReplacement, agar bisa kembali ke halaman ini.
-            onTap: () {
-              Navigator.pop(context); // Tutup drawer
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MerchandisePage()),
-              );
-            }, 
-          ),
-          
-          const Divider(color: Colors.white12),
-          */
         ],
       ),
     );
@@ -548,7 +350,7 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
                 color: Colors.white,
                 fontWeight: FontWeight.bold)),
 
-        // 2. Actions (Tombol Merchandise dan Profil)
+        // 2. Actions (Tombol Merchandise dan Profil/Login)
         actions: [
           // Tombol Merchandise
           IconButton(
@@ -563,17 +365,73 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
             tooltip: 'Merchandise',
           ),
 
-          // Tombol Profil
+          // Tombol Profil / Login (LOGIKA KRITIS)
           IconButton(
-            icon: const Icon(Icons.person, color: Colors.white),
+            icon: Icon(
+              _isLoggedIn ? Icons.person : Icons.login,
+              color: Colors.white
+            ),
             onPressed: () {
-              // Menggunakan 'push' untuk menavigasi ke halaman Profil
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilPage()),
-              );
+              final initialContext = context; 
+              
+              if (_isLoggedIn) {
+                // Sudah login -> Navigasi ke halaman Profil
+                Navigator.push(
+                  initialContext,
+                  MaterialPageRoute(builder: (context) => const ProfilPage()),
+                ).then((value) { // <--- KRITIS: Dengar hasil dari ProfilPage
+                    // 'value' akan bernilai 'true' jika logout
+                    if (value == true) { 
+                        _checkLoginStatus(); // 1. Update status login (jadi false)
+                        _commentsSectionKey.currentState?.loadComments(); // 2. Refresh komentar
+                        
+                        // 3. Tampilkan SnackBar
+                        if (mounted) {
+                            ScaffoldMessenger.of(initialContext).showSnackBar(
+                                const SnackBar(
+                                    content: Text("Anda telah berhasil keluar (Logout)."),
+                                    backgroundColor: Colors.orange,
+                                    duration: Duration(seconds: 2),
+                                ),
+                            );
+                        }
+                    }
+                });
+              } else {
+                // Belum login -> Tampilkan halaman Login
+                Navigator.push(
+                  initialContext,
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(
+                      onClose: () {
+                        // 1. Tutup halaman LoginPage
+                        Navigator.pop(initialContext); 
+                        
+                        // 2. Perbarui status login di JawaTimurPage
+                        _checkLoginStatus(); 
+                        
+                        // 3. KRITIS: Refresh CommentsSection setelah login sukses
+                        _commentsSectionKey.currentState?.loadComments(); 
+                        
+                        // 4. Tampilkan SnackBar (Dipastikan setelah pop)
+                        Future.delayed(Duration.zero, () {
+                            if (mounted) {
+                                ScaffoldMessenger.of(initialContext).showSnackBar(
+                                    const SnackBar(
+                                        content: Text("Status login dan Komentar diperbarui!"),
+                                        backgroundColor: Colors.green,
+                                        duration: Duration(seconds: 2),
+                                    ),
+                                );
+                            }
+                        });
+                      },
+                    ),
+                  ),
+                );
+              }
             },
-            tooltip: 'Profil Pengguna',
+            tooltip: _isLoggedIn ? 'Profil Pengguna' : 'Masuk (Login)',
           ),
           const SizedBox(width: 10),
         ],
@@ -615,7 +473,7 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // === HERO IMAGE (Jawa Timur) - Menggunakan 'jatim.jpg' dari input Anda ===
+                    // === HERO IMAGE (Jawa Timur) ===
                     Stack(
                       alignment: Alignment.bottomLeft,
                       children: [
@@ -664,7 +522,7 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
                       ],
                     ),
 
-                    // === Konten Teks Sejarah (DARI INPUT PENGGUNA) ===
+                    // === Konten Teks Sejarah ===
                     Padding(
                       padding: EdgeInsets.symmetric(
                           horizontal: horizontalPadding, vertical: 30),
@@ -701,9 +559,8 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
                             content: part4Perjuangan,
                             isMobile: isMobile,
                           ),
-                          // Tidak perlu Divider di sini karena ada gambar di tengah
 
-                          // === Tambahan: Tampilan Gambar Jatimg2.jpg & Caption ===
+                          // === Tampilan Gambar Jatimg2.jpg & Caption ===
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 20),
                             child: Column(
@@ -744,7 +601,7 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
                           ),
                           const SizedBox(height: 10), // Tambahkan sedikit jarak setelah caption
 
-                          // === Tambahan: Era Perjuangan Kemerdekaan (Bagian 2 - Lanjutan) ===
+                          // === Bagian 5: Era Perjuangan Kemerdekaan (Bagian 2 - Lanjutan) ===
                           _buildContentSection(
                             title: "", // Judul kosong untuk lanjutan teks
                             content: part5PerjuanganLanjutan,
@@ -789,8 +646,14 @@ class _JawaTimurPageState extends State<JawaTimurPage> {
                           // --- Akhir Tombol Merchandise Panggilan Cepat ---
 
 
-                          // === Kolom Komentar ===
-                          _buildCommentSection(isMobile: isMobile),
+                          // ===================== BAGIAN KOMENTAR (DENGAN KEY) =====================
+                          // Menggantikan panggilan _buildCommentSection lama
+                          CommentsSection(
+                            key: _commentsSectionKey, // Inject GlobalKey
+                            isMobile: isMobile,
+                            horizontalPadding: 0, 
+                            contentId: 'jawa_timur',
+                          ),
 
                           const SizedBox(height: 50),
                         ],

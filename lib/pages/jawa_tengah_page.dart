@@ -1,40 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Untuk cek status login
 
 // Asumsi Anda memiliki IntroPage dan halaman daerah lain di path yang sama atau relatif
 import 'intro_page.dart'; 
+import '../widgets/comments_section.dart'; // Komponen komentar modular
 import 'jakarta_page.dart';
 import 'jawa_timur_page.dart'; 
 import 'jawa_barat_page.dart'; 
 import 'bali_page.dart'; 
 
 // Import halaman-halaman tujuan yang baru:
-import 'merchandise_page.dart'; // <--- DITAMBAHKAN
-import 'profil_page.dart'; // <--- DITAMBAHKAN
-
-// --- Mockup Halaman (Jika belum dibuat, gunakan class mockup agar kode tidak error) ---
-// Jika file import di atas belum ada, Anda bisa menggunakan class mockup ini:
-// class IntroPage extends StatelessWidget { const IntroPage({super.key}); @override Widget build(BuildContext context) { return const Scaffold(body: Center(child: Text("Halaman Intro"))); } }
-// class JakartaPage extends StatelessWidget { const JakartaPage({super.key}); @override Widget build(BuildContext context) { return const Scaffold(body: Center(child: Text("Halaman Jakarta"))); } }
-// class JawaTimurPage extends StatelessWidget { const JawaTimurPage({super.key}); @override Widget build(BuildContext context) { return const Scaffold(body: Center(child: Text("Halaman Jawa Timur"))); } }
-// class JawaBaratPage extends StatelessWidget { const JawaBaratPage({super.key}); @override Widget build(BuildContext context) { return const Scaffold(body: Center(child: Text("Halaman Jawa Barat"))); } }
-// class BaliPage extends StatelessWidget { const BaliPage({super.key}); @override Widget build(BuildContext context) { return const Scaffold(body: Center(child: Text("Halaman Bali"))); } }
-// class MerchandisePage extends StatelessWidget { const MerchandisePage({super.key}); @override Widget build(BuildContext context) { return const Scaffold(body: Center(child: Text("Halaman Merchandise"))); } } // <--- Mockup
-// class ProfilPage extends StatelessWidget { const ProfilPage({super.key}); @override Widget build(BuildContext context) { return const Scaffold(body: Center(child: Text("Halaman Profil"))); } } // <--- Mockup
-// ---------------------------------------------------------------------------------------
-
-
-// --- Model dan Data Tiruan ---
-
-// Model untuk data komentar
-class Comment {
-  final String user;
-  final String date;
-  final String content;
-  Comment(this.user, this.date, this.content);
-}
-
-// Data komentar tiruan
-final List<Comment> mockComments = [];
+import 'merchandise_page.dart'; 
+import 'profil_page.dart'; 
+import 'login_page.dart'; 
 
 // --- FUNGSI MAIN UNTUK MENJALANKAN APLIKASI ---
 void main() {
@@ -66,7 +44,6 @@ class MyApp extends StatelessWidget {
 // ============================================================================
 //                   JAWA TENGAH PAGE (StatefulWidget)
 // ============================================================================
-// Diubah menjadi StatefulWidget agar Komentar bisa di-update (setState)
 class JawaTengahPage extends StatefulWidget {
   const JawaTengahPage({super.key});
 
@@ -75,48 +52,42 @@ class JawaTengahPage extends StatefulWidget {
 }
 
 class _JawaTengahPageState extends State<JawaTengahPage> {
-  // Controller untuk mengelola input komentar
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _commentController = TextEditingController();
+  // Status login
+  bool _isLoggedIn = false; 
+  
+  // KUNCI KRITIS: Untuk mengakses State dari CommentsSection dan memanggil refresh.
+  final GlobalKey<CommentsSectionState> _commentsSectionKey = GlobalKey<CommentsSectionState>();
 
-  // Map untuk menentukan rute halaman target (diubah dari static const menjadi instance field)
+  // Map untuk menentukan rute halaman target
   final Map<String, Widget> pageRoutes = {
     'Jakarta': const JakartaPage(),
     'Jawa Timur': const JawaTimurPage(),
-    // 'Jawa Tengah': const JawaTengahPage(), // Dihapus agar tidak menavigasi ke halaman sendiri melalui drawer
+    'Jawa Tengah': const JawaTengahPage(), // Pertahankan untuk routing internal jika diperlukan
     'Jawa Barat': const JawaBaratPage(),
     'Bali': const BaliPage(),
-    'Merchandise': const MerchandisePage(), // Ditambahkan (untuk navigasi push via tombol)
-    'Profil': const ProfilPage(), // Ditambahkan (untuk navigasi push via tombol)
+    'Merchandise': const MerchandisePage(),
+    'Profil': const ProfilPage(),
   };
+
+  // Fungsi untuk memeriksa status login dari SharedPreferences
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = prefs.getBool('is_logged_in') ?? false; 
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus(); // Cek status saat halaman dimuat
+  }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _commentController.dispose();
     super.dispose();
-  }
-
-  // Logika Mock KIRIM Komentar (Sekarang berfungsi karena ada setState)
-  void _submitComment() {
-    final name = _nameController.text.trim();
-    final content = _commentController.text.trim();
-
-    if (name.isNotEmpty && content.isNotEmpty) {
-      setState(() {
-        // Tambahkan komentar ke list global
-        mockComments.add(Comment(name, "Baru saja", content)); 
-      });
-      _nameController.clear();
-      _commentController.clear();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Komentar berhasil ditambahkan (Mock).', style: TextStyle(fontFamily: 'Nusantara'))),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nama dan komentar tidak boleh kosong.', style: TextStyle(fontFamily: 'Nusantara'))),
-      );
-    }
   }
 
   // Widget untuk menampilkan bagian teks konten
@@ -152,167 +123,7 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
     );
   }
 
-  // Widget untuk menampilkan Kolom Komentar
-  Widget _buildCommentSection({required bool isMobile}) {
-    // List Komentar
-    final commentList = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: mockComments.isEmpty
-          ? [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20.0),
-                child: Center(
-                  child: Text(
-                    "Belum ada komentar. Jadilah yang pertama berkomentar!",
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.grey.shade400,
-                      fontSize: isMobile ? 16 : 18,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ]
-          : mockComments.map((comment) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          comment.user,
-                          style: TextStyle(
-                            fontFamily: 'Nusantara',
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: isMobile ? 16 : 18,
-                          ),
-                        ),
-                        Text(
-                          comment.date,
-                          style: TextStyle(
-                            fontFamily: 'Nusantara',
-                            color: Colors.grey.shade400,
-                            fontSize: isMobile ? 12 : 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      comment.content,
-                      textAlign: TextAlign.justify,
-                      style: TextStyle(
-                        fontFamily: 'Nusantara',
-                        color: Colors.white70,
-                        fontSize: isMobile ? 15 : 16,
-                        height: 1.5,
-                      ),
-                    ),
-                    const Divider(color: Colors.white12, height: 10, thickness: 0.5),
-                  ],
-                ),
-              );
-            }).toList(),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Title Komentar
-        Text(
-          "Kolom Komentar",
-          style: TextStyle(
-            fontFamily: 'Nusantara',
-            fontSize: isMobile ? 22 : 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.amber,
-          ),
-        ),
-        const SizedBox(height: 25),
-
-        // Comment Input Form
-        Container(
-          padding: const EdgeInsets.all(15),
-          margin: const EdgeInsets.only(bottom: 40),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.amber.withOpacity(0.5)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.5),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ]
-          ),
-          child: Column(
-            children: [
-              TextField(
-                controller: _nameController, // Controller Nama
-                decoration: InputDecoration(
-                  hintText: "Nama Anda",
-                  hintStyle: TextStyle(color: Colors.grey.shade500, fontFamily: 'Nusantara'),
-                  filled: true,
-                  fillColor: Colors.black.withOpacity(0.3),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                ),
-                style: const TextStyle(color: Colors.white, fontFamily: 'Nusantara'),
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: _commentController, // Controller Komentar
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: "Tulis komentar Anda di sini...",
-                  hintStyle: TextStyle(color: Colors.grey.shade500, fontFamily: 'Nusantara'),
-                  filled: true,
-                  fillColor: Colors.black.withOpacity(0.3),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                ),
-                style: const TextStyle(color: Colors.white, fontFamily: 'Nusantara'),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submitComment, // Menggunakan fungsi submit yang baru
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber, 
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    "Kirim Komentar",
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Daftar Komentar
-        commentList,
-      ],
-    );
-  }
-
-  // Widget baru untuk membuat menu drawer (menu strip 3)
+  // Widget untuk membuat menu drawer
   Widget _buildAppDrawer(BuildContext context, bool isMobile) {
     const listTileColor = Colors.white70;
     const iconColor = Colors.amber;
@@ -328,7 +139,7 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
           MaterialPageRoute(builder: (context) => const IntroPage()), 
         );
       } 
-      // Navigasi ke halaman regional lain (menggunakan pageRoutes yang sudah diupdate)
+      // Navigasi ke halaman regional lain
       else if (pageRoutes.containsKey(destination)) {
         Widget nextPage = pageRoutes[destination]!;
         Navigator.pushReplacement(
@@ -342,12 +153,12 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
       }
     }
 
-    // Daftar menu Sejarah Daerah
+    // Daftar menu Sejarah Daerah (DIPERBAIKI: Set Jawa Tengah sebagai Current)
     final List<Map<String, dynamic>> regionalHistory = [
       {'name': 'Jakarta', 'isCurrent': false},
       {'name': 'Jawa Timur', 'isCurrent': false},
       {'name': 'Jawa Tengah', 'isCurrent': true}, // Jawa Tengah adalah halaman saat ini
-      {'name': 'Jawa Barat', 'isCurrent': false},
+      {'name': 'Jawa Barat', 'isCurrent': false}, 
       {'name': 'Bali', 'isCurrent': false},
     ];
 
@@ -369,7 +180,7 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
                 children: [
                   Positioned.fill(
                     child: Image.asset(
-                      'assets/images/jateng.jpg', // Gambar Jateng
+                      'assets/images/jateng.jpg', // Ganti gambar header ke Jateng (Asumsi path)
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey.shade800,
@@ -476,7 +287,6 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
           ),
           
           const Divider(color: Colors.white12),
-          // Merchandise tidak ditampilkan di Drawer sesuai permintaan sebelumnya
         ],
       ),
     );
@@ -495,37 +305,42 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
     const double kAppBarHeight = 56.0;
     final double topPadding = topSafeAreaPadding + kAppBarHeight;
 
+    // --------------------------------------------------------------------------
+    // --- Konten Teks Jawa Tengah (DIPERBARUI) ---
+    // --------------------------------------------------------------------------
+    
     // --- Konten Geografi dan Administrasi ---
     final String geografiLokasi =
-        "Jawa Tengah sebagai salah satu Propinsi di Jawa, letaknya diapit oleh dua Propinsi besar, yaitu Jawa Barat dan Jawa Timur. Letaknya 5º40′ dan 8º30′ Lintang Selatan dan antara 108º30′ dan 111º30′ Bujur Timur (termasuk Pulau Karimunjawa). Jarak terjauh dari Barat ke Timur adalah **263 Km** dan dari Utara ke Selatan **226 Km** (tidak termasuk pulau Karimunjawa).";
+        "Jawa Tengah sebagai salah satu Propinsi di Jawa, letaknya diapit oleh dua Propinsi besar, yaitu Jawa Barat dan Jawa Timur. Letaknya 5º40′ dan 8º30′ Lintang Selatan dan antara 108º30′ dan 111º30′ Bujur Timur (termasuk Pulau Karimunjawa). Jarak terjauh dari Barat ke Timur adalah 263 Km dan dari Utara ke Selatan 226 Km (tidak termasuk pulau Karimunjawa).";
 
     final String administrasiLuas =
-        "Secara administratif Propinsi Jawa Tengah terbagi menjadi **29 Kabupaten dan 6 Kota**. Luas Wilayah Jawa Tengah sebesar **3,25 juta hektar** atau sekitar **25,04 persen** dari luas pulau Jawa (1,70 persen luas Indonesia). Luas yang ada terdiri dari **1,00 juta hektar** (30,80 persen) **lahan sawah** dan **2,25 juta hektar** (69,20 persen) **bukan lahan sawah**.";
+        "Secara administratif Propinsi Jawa Tengah terbagi menjadi 29 Kabupaten dan 6 Kota. Luas Wilayah Jawa Tengah sebesar 3,25 juta hektar atau sekitar 25,04 persen dari luas pulau Jawa (1,70 persen luas Indonesia). Luas yang ada terdiri dari 1,00 juta hektar (30,80 persen) lahan sawah dan 2,25 juta hektar (69,20 persen) bukan lahan sawah.";
 
     final String penggunaanLahan =
-        "Menurut penggunaannya, luas lahan sawah terbesar berpengairan teknis (**38,26 persen**), selainnya berpengairan setengah teknis, tadah hujan dan lain-lain. Dengan teknik irigasi yang baik, potensi lahan sawah yang dapat ditanami padi lebih dari dua kali sebesar **69,56 persen**.\n\n"
-        "Berikutnya lahan kering yang dipakai untuk tegalan/kebun/ladang/huma sebesar **34,36 persen** dari total bukan lahan sawah. Persentase tersebut merupakan yang terbesar, dibandingkan presentase penggunaan bukan lahan sawah yang lain.";
+        "Menurut penggunaannya, luas lahan sawah terbesar berpengairan teknis (38,26 persen), selainnya berpengairan setengah teknis, tadah hujan dan lain-lain. Dengan teknik irigasi yang baik, potensi lahan sawah yang dapat ditanami padi lebih dari dua kali sebesar 69,56 persen.\n\n"
+        "Berikutnya lahan kering yang dipakai untuk tegalan/kebun/ladang/huma sebesar 34,36 persen dari total bukan lahan sawah. Persentase tersebut merupakan yang terbesar, dibandingkan presentase penggunaan bukan lahan sawah yang lain.";
 
     final String iklimSuhu =
-        "Menurut Stasiun Klimatologi Klas 1 Semarang, suhu udara rata-rata di Jawa Tengah berkisar antara **18ºC sampai 28ºC**. Tempat-tempat yang letaknya dekat pantai mempunyai suhu udara rata-rata relatif tinggi. Sementara itu, suhu rata-rata tanah berumput (kedalaman 5 Cm), berkisar antara **17ºC sampai 35ºC**. Rata-rata suhu air berkisar antara **21ºC sampai 28ºC**. Sedangkan untuk kelembaban udara rata-rata bervariasi, dari **73 persen sampai 94 persen**. Curah hujan terbanyak terdapat di Stasiun Meteorologi Pertanian khusus batas Salatiga sebanyak **3.990 mm**, dengan hari hujan **195 hari**.";
-        
+        "Menurut Stasiun Klimatologi Klas 1 Semarang, suhu udara rata-rata di Jawa Tengah berkisar antara 18ºC sampai 28ºC. Tempat-tempat yang letaknya dekat pantai mempunyai suhu udara rata-rata relatif tinggi. Sementara itu, suhu rata-rata tanah berumput (kedalaman 5 Cm), berkisar antara 17ºC sampai 35ºC. Rata-rata suhu air berkisar antara 21ºC sampai 28ºC. Sedangkan untuk kelembaban udara rata-rata bervariasi, dari 73 persen sampai 94 persen. Curah hujan terbanyak terdapat di Stasiun Meteorologi Pertanian khusus batas Salatiga sebanyak 3.990 mm, dengan hari hujan 195 hari.";
+    
     // --- Konten Sejarah Jawa Tengah ---
     final String eraKuno = 
-        "Sejak abad VII, banyak terdapat pemerintahan kerajaan yang berdiri di Jawa Tengah (Central Java), yaitu: Kerajaan Budha **Kalingga**, Jepara yang diperintah oleh Ratu Sima pada tahun 674.\n\n"
-        "Menurut naskah/prasasti Canggah tahun 732, kerajaan Hindu lahir di **Medang Kamulan**, Jawa Tengah dengan nama Raja Sanjaya atau **Rakai Mataram**. Di bawah pemerintahan Rakai Pikatan dari Dinasti Sanjaya, ia membangun Candi Rorojonggrang atau Candi **Prambanan**. "
-        "Kerajaan Mataram Budha yang juga lahir di Jawa Tengah selama era pemerintahan **Dinasti Syailendra**, mereka membangun candi-candi seperi Candi **Borobudur**, Candi Sewu, Candi Kalasan dll.";
+        "Sejak abad VII, banyak terdapat pemerintahan kerajaan yang berdiri di Jawa Tengah (Central Java), yaitu: Kerajaan Budha Kalingga, Jepara yang diperintah oleh Ratu Sima pada tahun 674.\n\n"
+        "Menurut naskah/prasasti Canggah tahun 732, kerajaan Hindu lahir di Medang Kamulan, Jawa Tengah dengan nama Raja Sanjaya atau Rakai Mataram. Di bawah pemerintahan Rakai Pikatan dari Dinasti Sanjaya, ia membangun Candi Rorojonggrang atau Candi Prambanan. "
+        "Kerajaan Mataram Budha yang juga lahir di Jawa Tengah selama era pemerintahan Dinasti Syailendra, mereka membangun candi-candi seperi Candi Borobudur, Candi Sewu, Candi Kalasan dll.";
 
     final String eraIslam =
-        "Pada abad 16 setelah runtuhnya kerajaan Majapahit Hindu, kerajaan Islam muncul di **Demak**, sejak itulah Agama Islam disebarkan di Jawa Tengah. Setelah kerajaan Demak runtuh, **Djoko Tingkir** anak menantu Raja Demak (Sultan Trenggono) memindahkan kerajaan Demak ke **Pajang** (dekat Solo), dan bergelar **Sultan Adiwijaya**.\n\n"
-        "Perang yang paling besar adalah antara Sultan Adiwijaya melawan **Aryo Penangsang**. Sultan Adiwijaya menugaskan **Danang Sutowijaya** untuk menumpas pemberontakan Aryo Penangsang. "
-        "Setelah Pajang runtuh, Sutowijaya menjadi Raja Mataram Islam pertama di Jawa Tengah dan bergelar **Panembahan Senopati**.";
+        "Pada abad 16 setelah runtuhnya kerajaan Majapahit Hindu, kerajaan Islam muncul di Demak, sejak itulah Agama Islam disebarkan di Jawa Tengah. Setelah kerajaan Demak runtuh, Djoko Tingkir anak menantu Raja Demak (Sultan Trenggono) memindahkan kerajaan Demak ke Pajang (dekat Solo), dan bergelar Sultan Adiwijaya.\n\n"
+        "Perang yang paling besar adalah antara Sultan Adiwijaya melawan Aryo Penangsang. Sultan Adiwijaya menugaskan Danang Sutowijaya untuk menumpas pemberontakan Aryo Penangsang. "
+        "Setelah Pajang runtuh, Sutowijaya menjadi Raja Mataram Islam pertama di Jawa Tengah dan bergelar Panembahan Senopati.";
 
     final String eraKolonialPerjuangan =
-        "Di pertengahan abad 16, bangsa Portugis dan Spanyol datang ke Indonesia dalam usaha mencari rempah-rempah. Pada saat yang sama, bangsa Inggris dan kemudian bangsa Belanda datang ke Indonesia juga. Dengan **VOC**-nya, bangsa Belanda menindas bangsa Indonesia termasuk rakyat Jawa Tengah baik di bidang politik maupun ekonomi.\n\n"
-        "Di awal abad 18, Kerajaan Mataram diperintah oleh **Sri Sunan Pakubuwono II**. Perselisihan keluarga raja dan campur tangan Belanda diselesaikan dengan **Perjanjian Gianti tahun 1755**. "
-        "Perjanjian ini membagi Kerajaan Mataram menjadi dua kerajaan yang lebih kecil: **Surakarta Hadiningrat** (Kraton Kasunanan) dan **Ngayogyakarta Hadiningrat** (Kraton Kasultanan).\n\n"
-        "Sampai sekarang, daerah Jawa Tengah secara administratif merupakan sebuah propinsi yang ditetapkan dengan Undang-undang No. **10/1950** tanggal 4 Juli 1950.";
+        "Di pertengahan abad 16, bangsa Portugis dan Spanyol datang ke Indonesia dalam usaha mencari rempah-rempah. Pada saat yang sama, bangsa Inggris dan kemudian bangsa Belanda datang ke Indonesia juga. Dengan VOC-nya, bangsa Belanda menindas bangsa Indonesia termasuk rakyat Jawa Tengah baik di bidang politik maupun ekonomi.\n\n"
+        "Di awal abad 18, Kerajaan Mataram diperintah oleh Sri Sunan Pakubuwono II. Perselisihan keluarga raja dan campur tangan Belanda diselesaikan dengan Perjanjian Gianti tahun 1755. "
+        "Perjanjian ini membagi Kerajaan Mataram menjadi dua kerajaan yang lebih kecil: Surakarta Hadiningrat (Kraton Kasunanan) dan Ngayogyakarta Hadiningrat (Kraton Kasultanan).\n\n"
+        "Sampai sekarang, daerah Jawa Tengah secara administratif merupakan sebuah propinsi yang ditetapkan dengan Undang-undang No. 10/1950 tanggal 4 Juli 1950.";
     // --------------------------------------------------------------------------
+
 
     return Scaffold(
       // === DRAWER Dihubungkan ===
@@ -548,13 +363,12 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
 
         title: const Text('Sejarah Jawa Tengah', style: TextStyle(fontFamily: 'Nusantara', color: Colors.white, fontWeight: FontWeight.bold)),
         
-        // 2. Actions (Tombol Merchandise dan Profil) <--- DIUBAH
+        // Actions (Tombol Merchandise dan Profil/Login - LOGIKA KRITIS INLINE)
         actions: [
-          // Tombol Merchandise (DITAMBAHKAN)
+          // Tombol Merchandise
           IconButton(
             icon: const Icon(Icons.shopping_bag, color: Colors.white),
             onPressed: () {
-              // Menggunakan 'push' agar tombol back kembali ke halaman ini
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const MerchandisePage()),
@@ -563,17 +377,73 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
             tooltip: 'Merchandise',
           ),
 
-          // Tombol Profil (DIUBAH)
+          // Tombol Profil / Login (LOGIKA DINAMIS dari jakarta_page.dart)
           IconButton(
-            icon: const Icon(Icons.person, color: Colors.white),
+            icon: Icon(
+              _isLoggedIn ? Icons.person : Icons.login, // Icon dinamis
+              color: Colors.white
+            ),
             onPressed: () {
-              // Menggunakan 'push' untuk menavigasi ke halaman Profil
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilPage()),
-              );
+              final initialContext = context; 
+              
+              if (_isLoggedIn) {
+                // Sudah login -> Navigasi ke halaman Profil
+                Navigator.push(
+                  initialContext,
+                  MaterialPageRoute(builder: (context) => const ProfilPage()),
+                ).then((value) { 
+                    // 'value' akan bernilai 'true' jika logout (dari ProfilPage)
+                    if (value == true) { 
+                        _checkLoginStatus(); // 1. Update status login (jadi false)
+                        _commentsSectionKey.currentState?.loadComments(); // 2. Refresh komentar
+                        
+                        // 3. Tampilkan SnackBar
+                        if (mounted) {
+                            ScaffoldMessenger.of(initialContext).showSnackBar(
+                                const SnackBar(
+                                    content: Text("Anda telah berhasil keluar (Logout)."),
+                                    backgroundColor: Colors.orange,
+                                    duration: Duration(seconds: 2),
+                                ),
+                            );
+                        }
+                    }
+                });
+              } else {
+                // Belum login -> Tampilkan halaman Login
+                Navigator.push(
+                  initialContext,
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(
+                      onClose: () {
+                        // 1. Tutup halaman LoginPage
+                        Navigator.pop(initialContext); 
+                        
+                        // 2. Perbarui status login
+                        _checkLoginStatus(); 
+                        
+                        // 3. Refresh CommentsSection setelah login sukses
+                        _commentsSectionKey.currentState?.loadComments(); 
+                        
+                        // 4. Tampilkan SnackBar (Dipastikan setelah pop)
+                        Future.delayed(Duration.zero, () {
+                            if (mounted) {
+                                ScaffoldMessenger.of(initialContext).showSnackBar(
+                                    const SnackBar(
+                                        content: Text("Login Berhasil! Status Komentar diperbarui."),
+                                        backgroundColor: Colors.green,
+                                        duration: Duration(seconds: 2),
+                                    ),
+                                );
+                            }
+                        });
+                      },
+                    ),
+                  ),
+                );
+              }
             },
-            tooltip: 'Profil Pengguna',
+            tooltip: _isLoggedIn ? 'Profil Pengguna' : 'Masuk (Login)',
           ),
           const SizedBox(width: 10),
         ],
@@ -589,7 +459,7 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
           // === 1. Background Image ===
           Positioned.fill(
             child: Image.asset(
-              'assets/images/tari-bali.jpg', 
+              'assets/images/tari-bali.jpg', // Asumsi path gambar
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Container(
                 color: Colors.black,
@@ -619,7 +489,7 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
                       alignment: Alignment.bottomLeft,
                       children: [
                         Image.asset(
-                          'assets/images/jateng.jpg', 
+                          'assets/images/jateng.jpg', // Ganti gambar hero ke Jateng (Asumsi path)
                           width: double.infinity,
                           height: isMobile ? 220 : 350, 
                           fit: BoxFit.cover,
@@ -662,7 +532,7 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 10),
                       child: Text(
-                        'Kantor gubernur di Semarang pada masa kolonial', 
+                        'Kantor gubernur di Semarang pada masa kolonial', // Deskripsi gambar Jateng
                         style: TextStyle(
                           fontFamily: 'Nusantara',
                           fontSize: isMobile ? 12 : 14,
@@ -677,30 +547,40 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Konten Geografi dan Administrasi
+                          
+                          // =======================================================
+                          // Konten Sejarah dan Administrasi (DIPERBARUI)
+                          // =======================================================
+                          
                           _buildContentSection(title: "Geografi dan Batas Wilayah", content: geografiLokasi, isMobile: isMobile),
                           const Divider(color: Colors.white24, height: 40),
-                          _buildContentSection(title: "Administrasi dan Data Luas", content: administrasiLuas, isMobile: isMobile),
-                          const Divider(color: Colors.white24, height: 40),
-                          _buildContentSection(title: "Potensi Penggunaan Lahan", content: penggunaanLahan, isMobile: isMobile),
-                          const Divider(color: Colors.white24, height: 40),
-                          _buildContentSection(title: "Kondisi Iklim dan Curah Hujan", content: iklimSuhu, isMobile: isMobile),
-                          const Divider(color: Colors.white24, height: 40),
-
-                          // Konten Sejarah
-                          _buildContentSection(title: "Era Kuno: Kerajaan dan Warisan Candi", content: eraKuno, isMobile: isMobile),
-                          const Divider(color: Colors.white24, height: 40),
-                          _buildContentSection(title: "Era Kesultanan Mataram Islam", content: eraIslam, isMobile: isMobile),
-                          _buildContentSection(title: "Era Kolonial, Perpecahan, dan Administrasi Modern", content: eraKolonialPerjuangan, isMobile: isMobile),
-
+                          
+                          _buildContentSection(title: "Administrasi dan Luas Wilayah", content: administrasiLuas, isMobile: isMobile),
                           const Divider(color: Colors.white24, height: 40),
                           
-                          // --- Tombol Merchandise Panggilan Cepat (DITAMBAHKAN) ---
+                          _buildContentSection(title: "Penggunaan Lahan", content: penggunaanLahan, isMobile: isMobile),
+                          const Divider(color: Colors.white24, height: 40),
+                          
+                          _buildContentSection(title: "Era Kerajaan Kuno (Hindu/Buddha)", content: eraKuno, isMobile: isMobile),
+                          const Divider(color: Colors.white24, height: 40),
+                          
+                          _buildContentSection(title: "Era Kesultanan Islam", content: eraIslam, isMobile: isMobile),
+                          const Divider(color: Colors.white24, height: 40),
+                          
+                          _buildContentSection(title: "Era Kolonial dan Perjuangan Kemerdekaan", content: eraKolonialPerjuangan, isMobile: isMobile),
+                          const Divider(color: Colors.white24, height: 40),
+                          
+                          _buildContentSection(title: "Iklim dan Suhu", content: iklimSuhu, isMobile: isMobile),
+                          
+                          // =======================================================
+                          
+                          const Divider(color: Colors.white24, height: 40),
+                          
+                          // --- Tombol Merchandise Panggilan Cepat ---
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: () {
-                                // Menggunakan 'push' agar tombol back kembali ke halaman ini
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -730,8 +610,13 @@ class _JawaTengahPageState extends State<JawaTengahPage> {
                           const SizedBox(height: 40),
                           // --- Akhir Tombol Merchandise Panggilan Cepat ---
 
-                          // Kolom Komentar (Sekarang menggunakan stateful logic)
-                          _buildCommentSection(isMobile: isMobile),
+                          // ===================== BAGIAN KOMENTAR (MODULAR BARU) =====================
+                          CommentsSection(
+                            key: _commentsSectionKey, // Inject GlobalKey
+                            isMobile: isMobile,
+                            horizontalPadding: 0, 
+                            contentId: 'jawa_tengah', // ID unik untuk konten ini
+                          ),
 
                           const SizedBox(height: 50),
                         ],

@@ -17,6 +17,135 @@ import '../pages/card_page.dart';
 import '../pages/merchandise_page.dart';
 import '../pages/payment_card.dart';
 
+// === WIDGET BARU: ShortcutCardItem (untuk efek hover) ===
+class ShortcutCardItem extends StatefulWidget {
+  final Map<String, dynamic> item;
+  final bool isMobile;
+  final Function(String) onNavigate;
+
+  const ShortcutCardItem({
+    required this.item,
+    required this.isMobile,
+    required this.onNavigate,
+    super.key,
+  });
+
+  @override
+  State<ShortcutCardItem> createState() => _ShortcutCardItemState();
+}
+
+class _ShortcutCardItemState extends State<ShortcutCardItem> {
+  bool _isHovering = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // Ukuran card disesuaikan agar terlihat keren di web dan mobile
+    final double cardWidth = widget.isMobile
+        ? (MediaQuery.of(context).size.width - 2 * 18 - 20) / 2
+        : 220;
+
+    // Menentukan faktor skala dan elevasi untuk efek hover
+    // Efek hover hanya berlaku jika bukan tampilan mobile
+    final double scale = _isHovering && !widget.isMobile ? 1.05 : 1.0;
+    final double elevation = _isHovering && !widget.isMobile ? 18.0 : 8.0;
+
+    return MouseRegion(
+      // KUNCI: Mendeteksi masuk/keluar pointer mouse
+      onEnter: (event) => setState(() => _isHovering = true),
+      onExit: (event) => setState(() => _isHovering = false),
+      cursor: SystemMouseCursors.click, // Mengubah kursor menjadi pointer
+      child: InkWell(
+        onTap: () => widget.onNavigate(widget.item['name'] as String), // Menggunakan fungsi navigasi yang sudah ada
+        borderRadius: BorderRadius.circular(18),
+        child: AnimatedContainer(
+          // KUNCI: Animasi transisi yang halus
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          width: cardWidth,
+          height: widget.isMobile ? 140 : 180,
+          // Menerapkan efek skala
+          transform: Matrix4.identity()..scale(scale), 
+          
+          decoration: BoxDecoration(
+            // Menerapkan bayangan yang lebih besar saat hover
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(_isHovering && !widget.isMobile ? 0.6 : 0.3),
+                spreadRadius: 0,
+                blurRadius: elevation, 
+                offset: Offset(0, elevation / 2),
+              ),
+            ],
+            // MENGGUNAKAN DecorationImage UNTUK COVER GAMBAR
+            image: DecorationImage(
+              image: AssetImage(widget.item['imagePath'] as String),
+              fit: BoxFit.cover,
+              // Warna fallback jika gambar gagal dimuat
+              onError: (exception, stackTrace) => const NetworkImage('assets/images/placeholder.jpg'),
+            ),
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Stack(
+            children: [
+              // Overlay hitam transparan untuk membuat teks mudah dibaca
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.1),
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Konten teks dan ikon
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Icon(widget.item['icon'] as IconData, color: Colors.white, size: 36),
+                    const SizedBox(height: 10),
+                    Text(
+                      widget.item['name'] as String,
+                      style: const TextStyle(
+                        fontFamily: 'Nusantara',
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(color: Colors.black, blurRadius: 4, offset: Offset(1, 1))
+                        ]
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.item['subtitle'] as String,
+                      style: TextStyle(
+                        fontFamily: 'Nusantara',
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.8),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+// === AKHIR WIDGET ShortcutCardItem ===
+
+
 class IntroPage extends StatefulWidget {
   const IntroPage({super.key});
 
@@ -293,10 +422,321 @@ class _IntroPageState extends State<IntroPage> {
     );
   }
 
+  // --- FUNGSI BARU: Shortcut Cards ---
+  Widget _buildShortcutCards(bool isMobile) {
+    // Definisi data untuk setiap shortcut DENGAN PENAMBAHAN imagePath
+    final List<Map<String, dynamic>> shortcuts = [
+      {'name': 'Jakarta', 'page': const JakartaPage(), 'icon': Icons.location_city, 'color': const Color(0xFFE53935), 'subtitle': 'Megapolitan & Betawi', 'imagePath': 'assets/images/jakarta1.jpg'}, // Merah
+      {'name': 'Jawa Timur', 'page': const JawaTimurPage(), 'icon': Icons.fastfood, 'color': const Color(0xFF43A047), 'subtitle': 'Sejarah Pembentukan Provinsi', 'imagePath': 'assets/images/jatim.jpg'}, // Hijau
+      {'name': 'Jawa Tengah', 'page': const JawaTengahPage(), 'icon': Icons.temple_buddhist, 'color': const Color(0xFF1E88E5), 'subtitle': 'Era Kerajaan & Era Kesultanan', 'imagePath': 'assets/images/jateng.jpg'}, // Biru
+      {'name': 'Jawa Barat', 'page': const JawaBaratPage(), 'icon': Icons.music_note, 'color': const Color(0xFF6A1B9A), 'subtitle': 'Sejarah Awal & Era Kerajaan Sunda', 'imagePath': 'assets/images/jabar.jpg'}, // Ungu
+      {'name': 'Bali', 'page': const BaliPage(), 'icon': Icons.beach_access, 'color': const Color(0xFFFFB300), 'subtitle': 'Pulau Dewata & Hindu', 'imagePath': 'assets/images/balidulu.jpg'}, // Emas/Jingga
+    ];
+
+    final double horizontalPadding = isMobile ? 18 : 40;
+
+    // KUNCI PERUBAHAN: Container luar sekarang memiliki warna overlay gelap
+    return Container(
+      width: double.infinity,
+      // Menggunakan warna overlay yang sama dengan Hero Section (0.45)
+      color: Colors.black.withOpacity(0.45), 
+      padding: EdgeInsets.symmetric(vertical: 40, horizontal: horizontalPadding),
+
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Judul Bagian Shortcut
+          const Text(
+            '🚀 Akses Cepat Daerah Pilihan',
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white, // Teks judul tetap putih
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Grid/Wrap untuk menampilkan cards
+          Center(
+            child: Wrap(
+              spacing: 20, // Jarak horizontal antar card
+              runSpacing: 20, // Jarak vertikal antar baris card
+              alignment: WrapAlignment.center,
+              // KUNCI PERUBAHAN: Menggunakan ShortcutCardItem yang baru
+              children: shortcuts.map((item) => ShortcutCardItem(
+                item: item, 
+                isMobile: isMobile, 
+                onNavigate: _navigateToRegion,
+              )).toList(), 
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  // --- Akhir Fungsi Shortcut Cards ---
+
+  // === FUNGSI BARU: Tempoe Doeloe Section (Bundaran HI, Jembatan Merah, Kota Lama, Braga, Catur Muka) ===
+
+  // Helper Widget for a single comparison card (Dulu/Sekarang)
+  Widget _buildComparisonCard(Map<String, String> item, bool isMobile) {
+    return Container(
+      margin: isMobile ? const EdgeInsets.only(bottom: 30) : EdgeInsets.zero,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.withOpacity(0.3), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Image
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.asset(
+              item['image']!,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: isMobile ? 200 : 250, // Fixed height for visual consistency
+              alignment: Alignment.center,
+              // Fallback jika gambar tidak ditemukan
+              errorBuilder: (context, error, stackTrace) => Container(
+                height: isMobile ? 200 : 250,
+                color: Colors.grey.shade800,
+                child: Center(
+                  child: Text(
+                    'Gambar tidak ditemukan: ${item['image']}',
+                    style: const TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 15),
+
+          // Title (Dahulu/Sekarang)
+          Text(
+            item['title']!,
+            style: const TextStyle(
+              fontFamily: 'Nusantara',
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.amber,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Description Text
+          Text(
+            item['text']!,
+            textAlign: TextAlign.justify,
+            style: const TextStyle(
+              fontFamily: 'Nusantara',
+              fontSize: 15,
+              height: 1.5,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // Helper function to build a complete comparison block (e.g., Bundaran HI or Jembatan Merah)
+  Widget _buildComparisonView({
+    required String subtitle, 
+    required List<Map<String, String>> data, 
+    required bool isMobile
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 30),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            fontFamily: 'Nusantara',
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 30),
+
+        isMobile
+            ? Column(
+                children: data.map((item) => _buildComparisonCard(item, isMobile)).toList(),
+              )
+            : Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: data.map((item) => Expanded(
+                  child: Padding(
+                    padding: item == data.first
+                        ? const EdgeInsets.only(right: 15) // Padding kanan untuk gambar pertama
+                        : const EdgeInsets.only(left: 15), // Padding kiri untuk gambar kedua
+                    child: _buildComparisonCard(item, isMobile),
+                  ),
+                )).toList(),
+              ),
+      ],
+    );
+  }
+
+  // Master Tempoe Doeloe Section
+  Widget _buildTempoeDoeloeSection(bool isMobile) {
+    final double horizontalPadding = isMobile ? 18 : 40;
+
+    // 1. Data Bundaran HI
+    final List<Map<String, String>> hiData = [
+      {
+        'title': 'Dahulu',
+        'image': 'assets/images/bundaranHIold.png',
+        'text': 'Diresmikan pada 1962 menjelang Pesta Olahraga Asia (Asian Games), Bundaran Hotel Indonesia (HI) menjadi ikon modernisasi Jakarta. Di tengah-tengahnya, terdapat Monumen Selamat Datang. Monumen tersebut dibuat oleh tim pematung Keluarga Arca, dipimpin oleh Edhi Sunarso, untuk menyambut para tamu dari mancanegara.',
+      },
+      {
+        'title': 'Sekarang',
+        'image': 'assets/images/BundaranHInow.jpg',
+        'text': 'Bundaran HI kini menjadi pusat aktivitas warga, dari Hari Bebas Kendaraan Bermotor (Car-Free Day) setiap Minggu hingga tempat perayaan tahun baru. Gedung-gedung tinggi, jalur Mass Rapid Transit (MRT), dan trotoar yang rapi mengubahnya menjadi wajah modern Jakarta. Kalau kamu ingin melihat Patung Selamat Datang dengan jelas, silakan naik ke lantai dua Halte Bundaran HI Astra!',
+      },
+    ];
+
+    // 2. Data Jembatan Merah
+    final List<Map<String, String>> jembatanMerahData = [
+      {
+        'title': 'Dahulu',
+        'image': 'assets/images/jembatanmerahOLD.jpg',
+        'text': 'Jembatan Merah dibangun pada tahun 1743 sebagai bagian dari perjanjian antara Kesultanan Mataram dan VOC, yang menjadikan kawasan sekitar jembatan sebagai pusat perdagangan penting di Surabaya.',
+      },
+      {
+        'title': 'Sekarang',
+        'image': 'assets/images/jembatanmerahNOW.jpg',
+        'text': 'sebuah jembatan bersejarah yang terletak di pusat kota Surabaya, Jawa Timur, Indonesia. Jembatan ini terkenal sebagai saksi bisu dari berbagai peristiwa penting dalam sejarah Indonesia, terutama yang terjadi pada masa perjuangan kemerdekaan.',
+      },
+    ];
+
+    // 3. Data Kota Lama
+    final List<Map<String, String>> kotaLamaData = [
+      {
+        'title': 'Dahulu',
+        'image': 'assets/images/kotalamaOLD.webp',
+        'text': 'Aktivitas warga dengan latar belakang bangunan gedung kawasan Kota Lama dan jembatan di Jalan Pemuda, Kota Semarang, Jawa Tengah, 23 Agustus 1986.',
+      },
+      {
+        'title': 'Sekarang',
+        'image': 'assets/images/kotalamaNOW.webp',
+        'text': 'Kota Lama yang dijuluki ”Little Netherland” seperti tumbuh kembali bersama binar cahaya lampu di antara bangunan tuanya beberapa tahun ini. Gairah kota metropolis pada abad ke-19 sebagai pusat perdagangan di pesisir utara Jawa itu seolah dihidupkan kembali seiring denyut hidup pariwisatanya.',
+      },
+    ];
+
+    // 4. Data Jalan Braga
+    final List<Map<String, String>> bragaData = [
+      {
+        'title': 'Dahulu',
+        'image': 'assets/images/bragaOLD.jpg',
+        'text': 'Dulunya Jalan Braga hanya sebuah jalan kecil berlumpur. Jalan ini menjadi jalur pedati untuk mengirimkan kopi dari gudang milik Andreas de Wilde ke Jalan Raya Pos (sekarang dikenal dengan Jalan Asia Afrika). Orang-orang dulu mengenal Braga sebagai Jalan Pedati (pedatiweg).',
+      },
+      {
+        'title': 'Sekarang',
+        'image': 'assets/images/bragaNOW.jpg',
+        'text': 'Seiring berjalannya waktu, jalan ini menjadi destinasi yang kerap disambangi oleh anak-anak muda dari berbagai penjuru sebagai tempat hangout mereka. Ratusan tahun lalu, Jalan Braga mulai ramai di bawah pemerintahan Hindia Belanda.',
+      },
+    ];
+    
+    // 5. Data Patung Catur Muka (BARU DITAMBAHKAN)
+    final List<Map<String, String>> caturMukaData = [
+      {
+        'title': 'Dahulu',
+        'image': 'assets/images/patungcaturmukaOLD.jpg',
+        'text': 'Sebelumnya diketahui bahwa Patung Catur Muka dirusak oleh Warga Negara Asing (WNA) yang tak mengantongi identitas pada Sabtu lalu. Dimana dari uahnya tersebut ornamen di Patung Catur Muka rusak, seperti halnya kelopak, ornamen bebadungan, serta satu slot pipa air mancur.',
+      },
+      {
+        'title': 'Sekarang',
+        'image': 'assets/images/patungcaturmukaNOW.jpg',
+        'text': 'Patung Carur Muka yang dikenal sebagai landmark Kota Denpasar kini tampil lebih indah. Pasalnya, kelopak teratai pada dasar patung yang sempat dirusak oleh WNA yang tak mengantongi identitas kini sudah kembali terpasang indah. Bahkan, polesan warna yang sempat pudar kini terlihat mengkilap. Berdasarkan pantauan di lapangan, seluruh ornamen telah terpasang dan Patung Catur Muka yang berlokasi di titik nol KM Kota Denpasar kini tampil lebih indah.',
+      },
+    ];
+
+
+    return Container(
+      width: double.infinity,
+      color: Colors.black.withOpacity(0.45), // Consistent dark overlay
+      padding: EdgeInsets.symmetric(vertical: 40, horizontal: horizontalPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '🏛️ Tempoe Doeloe', // Adding a relevant icon
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.amber,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // --- BLOCK 1: Bundaran HI ---
+          _buildComparisonView(
+            subtitle: 'Bundaran HI Dulu & Sekarang',
+            data: hiData,
+            isMobile: isMobile,
+          ),
+          
+          // --- Separator ---
+          const SizedBox(height: 60), 
+          const Divider(color: Colors.white24, thickness: 1.0),
+          
+          // --- BLOCK 2: Jembatan Merah ---
+          _buildComparisonView(
+            subtitle: 'Jembatan Merah Dulu & Sekarang',
+            data: jembatanMerahData,
+            isMobile: isMobile,
+          ),
+
+          // --- Separator ---
+          const SizedBox(height: 60), 
+          const Divider(color: Colors.white24, thickness: 1.0),
+
+          // --- BLOCK 3: Kota Lama ---
+          _buildComparisonView(
+            subtitle: 'Kota Lama Dulu & Sekarang',
+            data: kotaLamaData,
+            isMobile: isMobile,
+          ),
+
+          // --- Separator ---
+          const SizedBox(height: 60), 
+          const Divider(color: Colors.white24, thickness: 1.0),
+
+          // --- BLOCK 4: Jalan Braga ---
+          _buildComparisonView(
+            subtitle: 'Jalan Braga Dulu & Sekarang',
+            data: bragaData,
+            isMobile: isMobile,
+          ),
+          
+          // --- Separator BARU ---
+          const SizedBox(height: 60), 
+          const Divider(color: Colors.white24, thickness: 1.0),
+          
+          // --- BLOCK 5: Patung Catur Muka (BARU DITAMBAHKAN) ---
+          _buildComparisonView(
+            subtitle: 'Patung Catur Muka Dulu & Sekarang',
+            data: caturMukaData,
+            isMobile: isMobile,
+          ),
+
+        ],
+      ),
+    );
+  }
+  // === AKHIR Tempoe Doeloe Section ===
+
   // === Footer Section (Tentang Pembuat) ===
   Widget _footerSection(bool isMobile) {
     final double horizontalPadding = 16;
-    // final double topSpacing = isMobile ? 0 : 10; // Dihapus untuk menghemat ruang vertikal
     // Tentukan lebar maksimum untuk background card
     final double contentCardMaxWidth = 650; 
 
@@ -382,7 +822,8 @@ class _IntroPageState extends State<IntroPage> {
         vertical: 10,
         horizontal: horizontalPadding,
       ),
-      color: Colors.transparent,
+      // KUNCI PERUBAHAN: Warna overlay gelap (0.45)
+      color: Colors.black.withOpacity(0.45), 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -401,6 +842,7 @@ class _IntroPageState extends State<IntroPage> {
             // KUNCI PERUBAHAN: Padding vertikal diperkecil dari 4 menjadi 2
             padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 8),
             decoration: BoxDecoration(
+              // Background card info tetap gelap agar kontras
               color: Colors.black.withOpacity(0.55),
               borderRadius: BorderRadius.circular(14),
               // Menghilangkan border
@@ -583,7 +1025,7 @@ class _IntroPageState extends State<IntroPage> {
                       ),
                     ),
 
-                    // FOOTER
+                    // FOOTER (di Drawer)
                     _footerSection(isMobile),
                   ],
                 ),
@@ -733,6 +1175,18 @@ class _IntroPageState extends State<IntroPage> {
       // === BODY ===
       body: Stack(
         children: [
+          // KUNCI PERUBAHAN 1: Background Image Global
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/tari-bali.jpg'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+
           SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -748,27 +1202,13 @@ class _IntroPageState extends State<IntroPage> {
                       width: double.infinity,
                       child: Stack(
                         children: [
-                          // Latar Belakang & Overlay Hitam
+                          // Overlay Hitam (0.45)
                           Container(
                             height: isMobile ? null : constraints.maxHeight,
                             constraints: isMobile
                                 ? BoxConstraints(minHeight: minMobileHeight)
                                 : null,
-                            decoration: const BoxDecoration(
-                              image: DecorationImage(
-                                image: AssetImage(
-                                  'assets/images/tari-bali.jpg',
-                                ), // ASUMSI: Gambar ini ada
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            height: isMobile ? null : constraints.maxHeight,
-                            constraints: isMobile
-                                ? BoxConstraints(minHeight: minMobileHeight)
-                                : null,
-                            color: Colors.black.withOpacity(0.45),
+                            color: Colors.black.withOpacity(0.45), 
                           ),
 
                           // KONTEN UTAMA DI PUSAT (Bottom Alignment)
@@ -813,6 +1253,14 @@ class _IntroPageState extends State<IntroPage> {
                     );
                   },
                 ),
+                
+                // === BAGIAN: SHORTCUT CARDS (Menggunakan ShortcutCardItem) ===
+                _buildShortcutCards(isMobile),
+                // ========================================================
+                
+                // === BAGIAN: TEMPOE DOELOE ===
+                _buildTempoeDoeloeSection(isMobile),
+                // =================================
 
                 // FOOTER UNTUK WEB BROWSER
                 if (!isMobile) _footerSection(isMobile),
@@ -828,7 +1276,6 @@ class _IntroPageState extends State<IntroPage> {
                 setState(() {
                   showLogin = false;
                 });
-                // FIX: Menghapus 'await' pada baris 744 untuk mengatasi 'void expression' error
                 _checkLoginStatus(); 
               },
             ),

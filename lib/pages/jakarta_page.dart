@@ -1,30 +1,19 @@
 library flutter_app;
 
 import 'package:flutter/material.dart';
-// Asumsi Anda memiliki IntroPage di path yang sama atau relatif
-import 'intro_page.dart'; // <-- Pastikan path ini benar!
+import 'package:shared_preferences/shared_preferences.dart'; 
+import 'intro_page.dart';
+// Asumsi path ini benar, jika tidak, mohon sesuaikan
+import '../widgets/comments_section.dart'; 
 
 // Import halaman-halaman tujuan yang baru:
-// PASTIKAN FILE-FILE INI ADA DI FOLDER YANG SAMA!
 import 'jawa_timur_page.dart';
 import 'jawa_tengah_page.dart';
 import 'jawa_barat_page.dart';
 import 'bali_page.dart';
-import 'merchandise_page.dart'; // <--- Halaman Merchandise
-import 'profil_page.dart'; // <--- BARU: Halaman Profil
-
-// --- Model dan Data Tiruan ---
-
-// Model untuk data komentar tiruan
-class Comment {
-  final String user;
-  final String date;
-  final String content;
-  Comment(this.user, this.date, this.content);
-}
-
-// Data komentar tiruan (Sekarang kosong - akan diisi oleh _submitComment)
-final List<Comment> mockComments = [];
+import 'merchandise_page.dart';
+import 'profil_page.dart';
+import 'login_page.dart'; 
 
 // --- Halaman JakartaPage (StatefulWidget) ---
 
@@ -36,28 +25,43 @@ class JakartaPage extends StatefulWidget {
 }
 
 class _JakartaPageState extends State<JakartaPage> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _commentController = TextEditingController();
+  // Status login
+  bool _isLoggedIn = false; 
+  
+  // KUNCI KRITIS: Untuk mengakses State dari CommentsSection dan memanggil refresh.
+  final GlobalKey<CommentsSectionState> _commentsSectionKey = GlobalKey<CommentsSectionState>();
 
-  // Map untuk menentukan rute halaman target
   static const Map<String, Widget> pageRoutes = {
     'Jakarta': JakartaPage(),
     'Jawa Timur': JawaTimurPage(),
     'Jawa Tengah': JawaTengahPage(),
     'Jawa Barat': JawaBaratPage(),
     'Bali': BaliPage(),
-    'Merchandise': MerchandisePage(), // Tetap definisikan, digunakan untuk navigasi
-    // 'Profil' tidak ditambahkan ke rute utama karena tidak ada di Drawer
+    'Merchandise': MerchandisePage(),
   };
+  
+  // Fungsi untuk memeriksa status login dari SharedPreferences
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = prefs.getBool('is_logged_in') ?? false; 
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus(); 
+  }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _commentController.dispose();
     super.dispose();
   }
 
-  // --- Widget Pembantu ---
+  // --- Widget Pembantu (Disederhanakan) ---
 
   Widget _buildContentSection({
     required String title,
@@ -68,12 +72,12 @@ class _JakartaPageState extends State<JakartaPage> {
       fontFamily: 'Nusantara',
       fontSize: isMobile ? 22 : 28,
       fontWeight: FontWeight.bold,
-      color: Colors.amber, // Warna emas/kuning untuk judul
+      color: Colors.amber, 
     );
     final contentStyle = TextStyle(
       fontFamily: 'Nusantara',
-      fontSize: isMobile ? 16 : 18, // Menyesuaikan ukuran font konten
-      color: Colors.white70, // Warna putih pudar untuk konten
+      fontSize: isMobile ? 16 : 18, 
+      color: Colors.white70, 
       height: 1.6,
       letterSpacing: 0.5,
     );
@@ -88,223 +92,13 @@ class _JakartaPageState extends State<JakartaPage> {
     );
   }
 
-  Widget _buildCommentSection({required bool isMobile}) {
-    void submitComment() {
-      final name = _nameController.text.trim();
-      final content = _commentController.text.trim();
-
-      if (name.isNotEmpty && content.isNotEmpty) {
-        setState(() {
-          mockComments.add(Comment(name, "Baru saja", content));
-        });
-        _nameController.clear();
-        _commentController.clear();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Komentar berhasil ditambahkan (Mock).',
-              style: TextStyle(fontFamily: 'Nusantara'),
-            ),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Nama dan komentar tidak boleh kosong.',
-              style: TextStyle(fontFamily: 'Nusantara'),
-            ),
-          ),
-        );
-      }
-    }
-
-    // List Komentar
-    final commentList = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: mockComments.isEmpty
-          ? [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20.0),
-                child: Center(
-                  child: Text(
-                    "Belum ada komentar. Jadilah yang pertama berkomentar!",
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.grey.shade400,
-                      fontSize: isMobile ? 16 : 18,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ]
-          : mockComments.map((comment) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          comment.user,
-                          style: TextStyle(
-                            fontFamily: 'Nusantara',
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: isMobile ? 16 : 18,
-                          ),
-                        ),
-                        Text(
-                          comment.date,
-                          style: TextStyle(
-                            fontFamily: 'Nusantara',
-                            color: Colors.grey.shade400,
-                            fontSize: isMobile ? 12 : 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      comment.content,
-                      textAlign: TextAlign.justify,
-                      style: TextStyle(
-                        fontFamily: 'Nusantara',
-                        color: Colors.white70,
-                        fontSize: isMobile ? 15 : 16,
-                        height: 1.5,
-                      ),
-                    ),
-                    const Divider(
-                      color: Colors.white12,
-                      height: 10,
-                      thickness: 0.5,
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Kolom Komentar",
-          style: TextStyle(
-            fontFamily: 'Nusantara',
-            fontSize: isMobile ? 22 : 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.amber,
-          ),
-        ),
-        const SizedBox(height: 25),
-        Container(
-          padding: const EdgeInsets.all(15),
-          margin: const EdgeInsets.only(bottom: 40),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: Colors.amber.withOpacity(0.5)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.5),
-                blurRadius: 10,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            children: [
-              TextField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  hintText: "Nama Anda",
-                  hintStyle: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontFamily: 'Nusantara',
-                  ),
-                  filled: true,
-                  fillColor: Colors.black.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                ),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Nusantara',
-                ),
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: _commentController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: "Tulis komentar Anda di sini...",
-                  hintStyle: TextStyle(
-                    color: Colors.grey.shade500,
-                    fontFamily: 'Nusantara',
-                  ),
-                  filled: true,
-                  fillColor: Colors.black.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                ),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Nusantara',
-                ),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: submitComment,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    "Kirim Komentar",
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        commentList,
-      ],
-    );
-  }
-
-  // Widget Drawer & Menu
   Widget _buildAppDrawer(BuildContext context, bool isMobile) {
     const listTileColor = Colors.white70;
     const iconColor = Colors.amber;
     final double headerHeight = isMobile ? 180 : 220;
 
-    // Fungsi navigasi drawer
     void navigateTo(String destination) {
-      Navigator.pop(context); // Tutup drawer
+      Navigator.pop(context);
 
       if (destination == 'Home') {
         Navigator.pushReplacement(
@@ -312,8 +106,6 @@ class _JakartaPageState extends State<JakartaPage> {
           MaterialPageRoute(builder: (context) => const IntroPage()),
         );
       }
-      // Navigasi ke halaman tujuan. Menggunakan pushReplacement untuk menu daerah
-      // agar tidak menumpuk terlalu banyak halaman di stack.
       else if (pageRoutes.containsKey(destination)) {
         Widget nextPage = pageRoutes[destination]!;
         Navigator.pushReplacement(
@@ -332,7 +124,6 @@ class _JakartaPageState extends State<JakartaPage> {
       }
     }
 
-    // Menu sejarah daerah
     final List<Map<String, dynamic>> regionalHistory = [
       {'name': 'Jakarta', 'isCurrent': true},
       {'name': 'Jawa Timur', 'isCurrent': false},
@@ -418,7 +209,6 @@ class _JakartaPageState extends State<JakartaPage> {
               ),
             ),
           ),
-
           ListTile(
             leading: const Icon(Icons.home, color: iconColor),
             title: const Text(
@@ -431,9 +221,7 @@ class _JakartaPageState extends State<JakartaPage> {
             ),
             onTap: () => navigateTo('Home'),
           ),
-
           const Divider(color: Colors.white12),
-
           ExpansionTile(
             initiallyExpanded: true,
             tilePadding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -452,7 +240,6 @@ class _JakartaPageState extends State<JakartaPage> {
             children: regionalHistory.map((item) {
               final isCurrent = item['isCurrent'] as bool;
               final name = item['name'] as String;
-
               return ListTile(
                 contentPadding: const EdgeInsets.only(left: 32.0, right: 16.0),
                 leading: Icon(
@@ -475,10 +262,7 @@ class _JakartaPageState extends State<JakartaPage> {
               );
             }).toList(),
           ),
-
           const Divider(color: Colors.white12),
-
-          // Menu Merchandise sudah dihapus dari Drawer, sesuai permintaan sebelumnya.
         ],
       ),
     );
@@ -532,11 +316,9 @@ class _JakartaPageState extends State<JakartaPage> {
           ),
         ),
         actions: [
-          // Tombol Merchandise (Tetap)
           IconButton(
             icon: const Icon(Icons.shopping_bag, color: Colors.white),
             onPressed: () {
-              // Menggunakan 'push' agar tombol back kembali ke halaman ini (JakartaPage)
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const MerchandisePage()),
@@ -545,17 +327,73 @@ class _JakartaPageState extends State<JakartaPage> {
             tooltip: 'Merchandise',
           ),
           
-          // Tombol Profil (BARU - berfungsi)
+          // Tombol Profil / Login (LOGIKA KRITIS)
           IconButton(
-            icon: const Icon(Icons.person, color: Colors.white),
+            icon: Icon(
+              _isLoggedIn ? Icons.person : Icons.login,
+              color: Colors.white
+            ),
             onPressed: () {
-              // Menggunakan 'push' untuk menavigasi ke halaman Profil
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilPage()),
-              );
+              final initialContext = context; 
+              
+              if (_isLoggedIn) {
+                // Sudah login -> Navigasi ke halaman Profil
+                Navigator.push(
+                  initialContext,
+                  MaterialPageRoute(builder: (context) => const ProfilPage()),
+                ).then((value) { // <--- KRITIS: Dengar hasil dari ProfilPage
+                    // 'value' akan bernilai 'true' jika logout
+                    if (value == true) { 
+                        _checkLoginStatus(); // 1. Update status login (jadi false)
+                        _commentsSectionKey.currentState?.loadComments(); // 2. Refresh komentar
+                        
+                        // 3. Tampilkan SnackBar
+                        if (mounted) {
+                            ScaffoldMessenger.of(initialContext).showSnackBar(
+                                const SnackBar(
+                                    content: Text("Anda telah berhasil keluar (Logout)."),
+                                    backgroundColor: Colors.orange,
+                                    duration: Duration(seconds: 2),
+                                ),
+                            );
+                        }
+                    }
+                });
+              } else {
+                // Belum login -> Tampilkan halaman Login
+                Navigator.push(
+                  initialContext,
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(
+                      onClose: () {
+                        // 1. Tutup halaman LoginPage
+                        Navigator.pop(initialContext); 
+                        
+                        // 2. Perbarui status login di JakartaPage
+                        _checkLoginStatus(); 
+                        
+                        // 3. KRITIS: Refresh CommentsSection setelah login sukses
+                        _commentsSectionKey.currentState?.loadComments(); 
+                        
+                        // 4. Tampilkan SnackBar (Dipastikan setelah pop)
+                        Future.delayed(Duration.zero, () {
+                            if (mounted) {
+                                ScaffoldMessenger.of(initialContext).showSnackBar(
+                                    const SnackBar(
+                                        content: Text("Status login dan Komentar diperbarui!"),
+                                        backgroundColor: Colors.green,
+                                        duration: Duration(seconds: 2),
+                                    ),
+                                );
+                            }
+                        });
+                      },
+                    ),
+                  ),
+                );
+              }
             },
-            tooltip: 'Profil Pengguna',
+            tooltip: _isLoggedIn ? 'Profil Pengguna' : 'Masuk (Login)',
           ),
           const SizedBox(width: 10),
         ],
@@ -592,7 +430,6 @@ class _JakartaPageState extends State<JakartaPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // === HERO IMAGE ===
                     Stack(
                       alignment: Alignment.bottomLeft,
                       children: [
@@ -645,7 +482,6 @@ class _JakartaPageState extends State<JakartaPage> {
 
                       ],
                     ),
-
                     // === KONTEN ===
                     Padding(
                       padding: EdgeInsets.symmetric(
@@ -660,31 +496,23 @@ class _JakartaPageState extends State<JakartaPage> {
                             content: part1Awal,
                             isMobile: isMobile,
                           ),
-
                           const Divider(color: Colors.white24, height: 40),
-
                           _buildContentSection(
                             title: "Perkembangan Nama dan Tiga Tahap Kota",
                             content: part2Perkembangan,
                             isMobile: isMobile,
                           ),
-
                           const Divider(color: Colors.white24, height: 40),
-
                           _buildContentSection(
                             title: "Kerajaan Sunda (669–1527)",
                             content: part5KerajaanSunda,
                             isMobile: isMobile,
                           ),
-
                           const Divider(color: Colors.white24, height: 40),
-
-                          // --- Tombol Merchandise Panggilan Cepat ---
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: () {
-                                // Menggunakan 'push' agar tombol back kembali ke halaman ini (JakartaPage)
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -712,9 +540,14 @@ class _JakartaPageState extends State<JakartaPage> {
                             ),
                           ),
                           const SizedBox(height: 40),
-                          // --- Akhir Tombol Merchandise Panggilan Cepat ---
 
-                          _buildCommentSection(isMobile: isMobile),
+                          // ===================== BAGIAN KOMENTAR (DENGAN KEY) =====================
+                          CommentsSection(
+                            key: _commentsSectionKey, // Inject GlobalKey di sini
+                            isMobile: isMobile,
+                            horizontalPadding: 0, 
+                            contentId: 'jakarta',
+                          ),
 
                           const SizedBox(height: 50),
                         ],

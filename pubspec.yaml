@@ -32,6 +32,7 @@ dependencies:
     sdk: flutter
   http: ^1.6.0
   shared_preferences: ^2.5.3
+  intl: ^0.20.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -77,6 +78,16 @@ flutter:
       - assets/images/batik_noder.jpg
       - assets/images/gantungan_bali.jpg
       - assets/images/doyfrid.png
+      - assets/images/BundaranHInow.jpg
+      - assets/images/bundaranHIold.png
+      - assets/images/jembatanmerahNOW.JPG
+      - assets/images/jembatanmerahOLD.jpg
+      - assets/images/kotalamaNOW.webp
+      - assets/images/kotalamaOLD.webp
+      - assets/images/bragaNOW.jpg
+      - assets/images/bragaOLD.jpg
+      - assets/images/patungcaturmukaNOW.jpg
+      - assets/images/patungcaturmukaOLD.jpg
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

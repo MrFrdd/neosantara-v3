@@ -1,28 +1,53 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // BARU: Untuk cek status login
 
 // --- Import Halaman Lain ---
 // PASTIKAN SEMUA FILE HALAMAN BERIKUT ADA di folder yang sama (misal: 'pages/')
 import 'intro_page.dart'; // Halaman Home/Landing
+import '../widgets/comments_section.dart'; // BARU: Komponen komentar modular
 import 'jakarta_page.dart';
 import 'jawa_timur_page.dart';
 import 'jawa_tengah_page.dart';
 import 'jawa_barat_page.dart';
-import 'merchandise_page.dart'; // <--- DITAMBAHKAN
-import 'profil_page.dart'; // <--- DITAMBAHKAN
+import 'merchandise_page.dart'; 
+import 'profil_page.dart'; 
+import 'login_page.dart'; // BARU: Halaman Login
 
-// --- Model dan Data Tiruan (Dibiarkan sama) ---
-class Comment {
-  final String user;
-  final String date;
-  final String content;
-  Comment(this.user, this.date, this.content);
+// --- FUNGSI MAIN UNTUK MENJALANKAN APLIKASI ---
+void main() {
+  runApp(const MyApp());
 }
 
-final List<Comment> mockBaliComments = [];
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
-// --- Halaman BaliPage (StatefulWidget) ---
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Sejarah Bali',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        // Tema gelap dipertahankan
+        primaryColor: Colors.black,
+        colorScheme: const ColorScheme.dark(
+          primary: Colors.amber, // Warna utama menjadi Amber
+          background: Colors.black,
+        ),
+        scaffoldBackgroundColor: Colors.black, // Background global
+      ),
+      home: const BaliPage(),
+    );
+  }
+}
+
+// ============================================================================
+//                          BALI PAGE (StatefulWidget)
+// ============================================================================
 
 class BaliPage extends StatefulWidget {
+  // BARU: Konstanta warna aksen
+  static const Color accentColor = Colors.amber;
+  
   const BaliPage({super.key});
 
   @override
@@ -30,42 +55,52 @@ class BaliPage extends StatefulWidget {
 }
 
 class _BaliPageState extends State<BaliPage> {
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _commentController = TextEditingController();
-
-  // Map untuk menentukan rute halaman target (dijadikan instance field)
+  // BARU: Status login
+  bool _isLoggedIn = false;
+  
+  // BARU: KUNCI KRITIS untuk CommentsSection
+  final GlobalKey<CommentsSectionState> _commentsSectionKey = GlobalKey<CommentsSectionState>();
+  
+  // Map untuk menentukan rute halaman target
   final Map<String, Widget> pageRoutes = {
     // Navigasi Home:
-    'Home': const IntroPage(), 
-    // Navigasi Sejarah Daerah (Menggunakan const pada constructor):
-    'Jakarta': const JakartaPage(), 
-    'Jawa Timur': const JawaTimurPage(), 
+    'Jakarta': const JakartaPage(),
+    'Jawa Timur': const JawaTimurPage(),
     'Jawa Tengah': const JawaTengahPage(), 
     'Jawa Barat': const JawaBaratPage(), 
-    // 'Bali' dihapus karena halaman saat ini
-    'Merchandise': const MerchandisePage(), // Ditambahkan (untuk navigasi push via tombol)
-    'Profil': const ProfilPage(), // Ditambahkan (untuk navigasi push via tombol)
+    'Bali': const BaliPage(), // Current Page
+    'Merchandise': const MerchandisePage(),
+    'Profil': const ProfilPage(),
   };
-  
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _commentController.dispose();
-    super.dispose();
+
+  // BARU: Fungsi untuk memeriksa status login
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = prefs.getBool('is_logged_in') ?? false; 
+      });
+    }
   }
 
-  // --- Widget Pembantu (_buildContentSection - Dibiarkan sama) ---
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus(); // Cek status saat halaman dimuat
+  }
 
+  // Widget untuk menampilkan bagian teks konten
   Widget _buildContentSection({
     required String title,
     required String content,
     required bool isMobile,
+    Color accentColor = BaliPage.accentColor, // Gunakan accentColor
   }) {
     final titleStyle = TextStyle(
       fontFamily: 'Nusantara',
       fontSize: isMobile ? 22 : 28,
       fontWeight: FontWeight.bold,
-      color: Colors.amber, 
+      color: accentColor, 
     );
     final contentStyle = TextStyle(
       fontFamily: 'Nusantara',
@@ -88,236 +123,47 @@ class _BaliPageState extends State<BaliPage> {
     );
   }
 
-  // --- Widget Pembantu (_buildCommentSection - Dibiarkan sama) ---
-
-  Widget _buildCommentSection({required bool isMobile}) {
-    // Logika Mock KIRIM Komentar (Dibiarkan sama)
-    void _submitComment() {
-      final name = _nameController.text.trim();
-      final content = _commentController.text.trim();
-
-      if (name.isNotEmpty && content.isNotEmpty) {
-        setState(() {
-          mockBaliComments.add(Comment(name, "Baru saja", content));
-        });
-        _nameController.clear();
-        _commentController.clear();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Komentar berhasil ditambahkan (Mock).',
-                  style: TextStyle(fontFamily: 'Nusantara'))),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Nama dan komentar tidak boleh kosong.',
-                  style: TextStyle(fontFamily: 'Nusantara'))),
-        );
-      }
-    }
-
-    final commentList = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: mockBaliComments.isEmpty
-          ? [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20.0),
-                child: Center(
-                  child: Text(
-                    "Belum ada komentar. Jadilah yang pertama berkomentar!",
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.grey.shade400,
-                      fontSize: isMobile ? 16 : 18,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              )
-            ]
-          : mockBaliComments.map((comment) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          comment.user,
-                          style: TextStyle(
-                            fontFamily: 'Nusantara',
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                            fontSize: isMobile ? 16 : 18,
-                          ),
-                        ),
-                        Text(
-                          comment.date,
-                          style: TextStyle(
-                            fontFamily: 'Nusantara',
-                            color: Colors.grey.shade400,
-                            fontSize: isMobile ? 12 : 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      comment.content,
-                      textAlign: TextAlign.justify,
-                      style: TextStyle(
-                        fontFamily: 'Nusantara',
-                        color: Colors.white70,
-                        fontSize: isMobile ? 15 : 16,
-                        height: 1.5,
-                      ),
-                    ),
-                    const Divider(color: Colors.white12, height: 10, thickness: 0.5),
-                  ],
-                ),
-              );
-            }).toList(),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Kolom Komentar",
-          style: TextStyle(
-            fontFamily: 'Nusantara',
-            fontSize: isMobile ? 22 : 28,
-            fontWeight: FontWeight.bold,
-            color: Colors.amber,
-          ),
-        ),
-        const SizedBox(height: 25),
-
-        Container(
-          padding: const EdgeInsets.all(15),
-          margin: const EdgeInsets.only(bottom: 40),
-          decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.4),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.amber.withOpacity(0.5)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ]),
-          child: Column(
-            children: [
-              TextField(
-                controller: _nameController, 
-                decoration: InputDecoration(
-                  hintText: "Nama Anda",
-                  hintStyle: TextStyle(
-                      color: Colors.grey.shade500, fontFamily: 'Nusantara'),
-                  filled: true,
-                  fillColor: Colors.black.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-                ),
-                style:
-                    const TextStyle(color: Colors.white, fontFamily: 'Nusantara'),
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: _commentController, 
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: "Tulis komentar Anda di sini...",
-                  hintStyle: TextStyle(
-                      color: Colors.grey.shade500, fontFamily: 'Nusantara'),
-                  filled: true,
-                  fillColor: Colors.black.withOpacity(0.3),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                ),
-                style:
-                    const TextStyle(color: Colors.white, fontFamily: 'Nusantara'),
-              ),
-              const SizedBox(height: 15),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submitComment, 
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber, 
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    "Kirim Komentar",
-                    style: TextStyle(
-                      fontFamily: 'Nusantara',
-                      color: Colors.black,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        commentList,
-      ],
-    );
-  }
-
-  // Widget untuk membuat menu drawer (menu strip 3)
+  // Widget untuk membuat menu drawer
   Widget _buildAppDrawer(BuildContext context, bool isMobile) {
     const listTileColor = Colors.white70;
-    const iconColor = Colors.amber;
+    const iconColor = BaliPage.accentColor; // Menggunakan warna aksen amber
     final double headerHeight = isMobile ? 180 : 220; 
 
-    // Fungsi navigasi yang HANYA digunakan untuk pushReplacement ke halaman regional lain/Home
+    // Fungsi navigasi yang sesungguhnya 
     void navigateTo(String destination) {
       Navigator.pop(context); // Tutup drawer
 
-      // Hanya ambil rute jika bukan Merchandise/Profil (karena mereka menggunakan push)
-      if (pageRoutes.containsKey(destination) && destination != 'Merchandise' && destination != 'Profil') {
+      if (destination == 'Home') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const IntroPage()), 
+        );
+      } 
+      // Navigasi ke halaman regional lain
+      else if (pageRoutes.containsKey(destination)) {
         Widget nextPage = pageRoutes[destination]!;
-        
-        // Gunakan pushReplacement 
-        Navigator.pushReplacement( 
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => nextPage),
         );
       } else {
-        // Fallback atau jika mencoba navigasi push dari drawer
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Halaman $destination belum diimplementasikan atau tidak dapat diakses dari Drawer.',
-                  style: const TextStyle(fontFamily: 'Nusantara'))),
+          SnackBar(content: Text('Halaman $destination belum diimplementasikan.', style: const TextStyle(fontFamily: 'Nusantara'))),
         );
       }
     }
 
+    // Daftar menu Sejarah Daerah (Set Bali sebagai Current)
     final List<Map<String, dynamic>> regionalHistory = [
       {'name': 'Jakarta', 'isCurrent': false},
       {'name': 'Jawa Timur', 'isCurrent': false},
-      {'name': 'Jawa Tengah', 'isCurrent': false},
-      {'name': 'Jawa Barat', 'isCurrent': false},
+      {'name': 'Jawa Tengah', 'isCurrent': false}, 
+      {'name': 'Jawa Barat', 'isCurrent': false}, 
       {'name': 'Bali', 'isCurrent': true}, // Bali adalah halaman saat ini
     ];
 
     return Drawer(
-      backgroundColor: Colors.black.withOpacity(0.95),
+      backgroundColor: Colors.black.withOpacity(0.95), 
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
@@ -328,19 +174,17 @@ class _BaliPageState extends State<BaliPage> {
               padding: EdgeInsets.zero,
               margin: EdgeInsets.zero,
               decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.amber, width: 2)),
+                border: Border(bottom: BorderSide(color: BaliPage.accentColor, width: 2)), // Warna border amber
               ),
               child: Stack(
                 children: [
                   Positioned.fill(
                     child: Image.asset(
-                      'assets/images/balidulu.jpg', // Gambar Bali
+                      'assets/images/bali.jpg', // Asumsi path gambar Bali
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey.shade800,
-                        child: const Center(
-                            child: Text("Header Image Not Found",
-                                style: TextStyle(color: Colors.red))),
+                        child: const Center(child: Text("Header Image Not Found", style: TextStyle(color: Colors.red))),
                       ),
                     ),
                   ),
@@ -365,7 +209,7 @@ class _BaliPageState extends State<BaliPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Sejarah Bali',
+                          'Sejarah Bali', 
                           style: TextStyle(
                             fontFamily: 'Nusantara',
                             color: Colors.white,
@@ -378,7 +222,7 @@ class _BaliPageState extends State<BaliPage> {
                           'Jelajahi Sejarah Indonesia',
                           style: TextStyle(
                             fontFamily: 'Nusantara',
-                            color: Colors.amber,
+                            color: BaliPage.accentColor, // Warna aksen amber
                             fontSize: 14,
                           ),
                         ),
@@ -390,15 +234,13 @@ class _BaliPageState extends State<BaliPage> {
             ),
           ),
 
-          // Menu Home
+          // Menu Home 
           ListTile(
             leading: const Icon(Icons.home, color: iconColor),
-            title: const Text('Home',
-                style: TextStyle(
-                    fontFamily: 'Nusantara', color: listTileColor, fontSize: 18)),
-            onTap: () => navigateTo('Home'), // <--- Menuju IntroPage
+            title: const Text('Home', style: TextStyle(fontFamily: 'Nusantara', color: listTileColor, fontSize: 18)),
+            onTap: () => navigateTo('Home'), 
           ),
-
+          
           const Divider(color: Colors.white12),
 
           // === ExpansionTile Sejarah Daerah ===
@@ -410,48 +252,47 @@ class _BaliPageState extends State<BaliPage> {
               'Sejarah Daerah',
               style: TextStyle(
                 fontFamily: 'Nusantara',
-                color: Colors.white,
+                color: Colors.white, 
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            iconColor: Colors.amber,
+            iconColor: BaliPage.accentColor, // Warna aksen amber
             collapsedIconColor: Colors.white70,
-
+            
             // Sub-menu (ListTile)
             children: regionalHistory.map((item) {
               final isCurrent = item['isCurrent'] as bool;
               final name = item['name'] as String;
-
+              
               return ListTile(
-                contentPadding: const EdgeInsets.only(left: 32.0, right: 16.0),
+                contentPadding: const EdgeInsets.only(left: 32.0, right: 16.0), 
                 leading: Icon(
-                  isCurrent ? Icons.location_city : Icons.location_city_outlined,
-                  color: isCurrent ? Colors.amber : listTileColor,
+                  isCurrent ? Icons.location_city : Icons.location_city_outlined, 
+                  color: isCurrent ? BaliPage.accentColor : listTileColor, // Warna aksen amber
                 ),
                 title: Text(
                   name,
                   style: TextStyle(
                     fontFamily: 'Nusantara',
-                    color: isCurrent ? Colors.amber : listTileColor,
+                    color: isCurrent ? BaliPage.accentColor : listTileColor, // Warna aksen amber
                     fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
                     fontSize: 16,
                   ),
                 ),
-                // PERBAIKAN: Jika halaman saat ini, tutup drawer saja
-                onTap: isCurrent ? () => Navigator.pop(context) : () => navigateTo(name), 
+                // Gunakan pushReplacement untuk navigasi regional
+                onTap: () => navigateTo(name), 
               );
             }).toList(),
           ),
-
+          
           const Divider(color: Colors.white12),
         ],
       ),
     );
   }
-
-  // --- Metode Build Utama (Teks konten dibiarkan sama) ---
-
+  
+  // --- Metode Build Utama ---
   @override
   Widget build(BuildContext context) {
     final Size screenSize = MediaQuery.of(context).size;
@@ -461,14 +302,13 @@ class _BaliPageState extends State<BaliPage> {
     const double maxWebWidth = 1200;
 
     final double topSafeAreaPadding = MediaQuery.of(context).padding.top;
-    const double kAppBarHeight = 56.0; 
+    const double kAppBarHeight = 56.0;
     final double topPadding = topSafeAreaPadding + kAppBarHeight;
 
-    // =========================================================================
-    // Konten Teks BARU (Geologi, Prasejarah, dan Sejarah Pergerakan)
-    // =========================================================================
+    // --------------------------------------------------------------------------
+    // --- Konten Teks Bali (Dipertahankan) ---
+    // --------------------------------------------------------------------------
     
-    // --- Bagian 1: Geologi ---
     final String part1Awal = 
         "Pulau Bali, seperti kebanyakan pulau di kepulauan Indonesia, adalah hasil dari **subduksi tektonik** lempeng Indo-Australia di bawah lempeng Eurasia. Dasar laut tersier, yang terbuat dari endapan laut purba termasuk akumulasi terumbu karang, terangkat di atas permukaan laut oleh subduksi. Lapisan batu kapur tersier yang terangkat dari dasar samudra masih terlihat di daerah-daerah seperti **Bukit semenanjung** dengan tebing batu kapur besar di Uluwatu, atau di barat laut pulau di Prapat Agung.";
 
@@ -507,36 +347,34 @@ class _BaliPageState extends State<BaliPage> {
         "Menyusul Proklamasi Kemerdekaan Indonesia, pada tanggal 23 Agustus 1945, Mr. I Gusti Ketut Puja tiba di Bali dengan membawa mandat pengangkatannya sebagai Gubernur Sunda Kecil. Sejak kedatangan dia inilah Proklamasi Kemerdekaan Indonesia di Bali mulai disebarluaskan sampai ke desa-desa. Pada saat itulah mulai diadakan persiapan-persiapan untuk mewujudkan susunan pemerintahan di Bali sebagai daerah Sunda Kecil dengan ibu kotanya Singaraja.\n\n"
         "Sejak pendaratan NICA di Bali, Bali selalu menjadi arena pertempuran. Dalam pertempuran itu pasukan RI menggunakan sistem gerilya. Oleh karena itu, MBO sebagai induk pasukan selalu berpindah-pindah. Untuk memperkuat pertahanan di Bali, didatangkan bantuan ALRI dari Jawa yang kemudian menggabungkan diri ke dalam pasukan yang ada di Bali. Karena seringnya terjadi pertempuran, pihak Belanda pernah mengirim surat kepada Rai untuk mengadakan perundingan. Akan tetapi, pihak pejuang Bali tidak bersedia, bahkan terus memperkuat pertahanan dengan mengikutsertakan seluruh rakyat.\n\n"
         "Untuk memudahkan kontak dengan Jawa, Rai pernah mengambil siasat untuk memindahkan perhatian Belanda ke bagian timur Pulau Bali. Pada 28 Mei 1946 Rai mengerahkan pasukannya menuju ke timur dan ini terkenal dengan sebutan \"Long March\". Selama diadakan \"Long March\" itu pasukan gerilya sering dihadang oleh tentara Belanda sehingga sering terjadi pertempuran. Pertempuran yang membawa kemenangan di pihak pejuang ialah pertempuran Tanah Arun, yaitu pertempuran yang terjadi di sebuah desa kecil di lereng Gunung Agung, Kabupaten Karangasem. Dalam pertempuran Tanah Arun yang terjadi 9 Juli 1946 itu pihak Belanda banyak menjadi korban. Setelah pertempuran itu pasukan Ngurah Rai kembali menuju arah barat yang kemudian sampai di Desa Marga (Tabanan). Untuk lebih menghemat tenaga karena terbatasnya persenjataan, ada beberapa anggota pasukan terpaksa disuruh berjuang bersama-sama dengan masyarakat.";
-    // =========================================================================
+
+    // --------------------------------------------------------------------------
+
 
     return Scaffold(
+      // === DRAWER Dihubungkan ===
       drawer: _buildAppDrawer(context, isMobile),
-
+      
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
 
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-
+        // Tombol Menu Kustom (Hamburger) di posisi Leading
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.amber), 
+            icon: const Icon(Icons.menu, color: BaliPage.accentColor), // Warna aksen amber
             onPressed: () {
-              Scaffold.of(context).openDrawer(); 
+              Scaffold.of(context).openDrawer(); // Membuka Drawer
             },
-            tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+            tooltip: 'Menu',
           ),
-        ),
+        ), 
 
-        title: const Text('Sejarah Bali',
-            style: TextStyle(
-                fontFamily: 'Nusantara',
-                color: Colors.white,
-                fontWeight: FontWeight.bold)),
-
-        // === Actions (Tombol Merchandise dan Profil) <--- DITAMBAHKAN/DIUBAH ===
+        title: const Text('Sejarah Bali', style: TextStyle(fontFamily: 'Nusantara', color: Colors.white, fontWeight: FontWeight.bold)),
+        
+        // Actions (Tombol Merchandise dan Profil/Login - LOGIKA KRITIS BARU)
         actions: [
-          // Tombol Merchandise (DITAMBAHKAN)
+          // Tombol Merchandise
           IconButton(
             icon: const Icon(Icons.shopping_bag, color: Colors.white),
             onPressed: () {
@@ -548,49 +386,105 @@ class _BaliPageState extends State<BaliPage> {
             tooltip: 'Merchandise',
           ),
 
-          // Tombol Profil (DIUBAH)
+          // Tombol Profil / Login (LOGIKA DINAMIS)
           IconButton(
-            icon: const Icon(Icons.person, color: Colors.white),
+            icon: Icon(
+              _isLoggedIn ? Icons.person : Icons.login, // Icon dinamis
+              color: Colors.white
+            ),
             onPressed: () {
-               // Menggunakan 'push' untuk menavigasi ke halaman Profil
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ProfilPage()),
-              );
+              final initialContext = context; 
+              
+              if (_isLoggedIn) {
+                // Sudah login -> Navigasi ke halaman Profil
+                Navigator.push(
+                  initialContext,
+                  MaterialPageRoute(builder: (context) => const ProfilPage()),
+                ).then((value) { 
+                    // 'value' akan bernilai 'true' jika logout (dari ProfilPage)
+                    if (value == true) { 
+                        _checkLoginStatus(); // 1. Update status login (jadi false)
+                        _commentsSectionKey.currentState?.loadComments(); // 2. Refresh komentar
+                        
+                        // 3. Tampilkan SnackBar
+                        if (mounted) {
+                            ScaffoldMessenger.of(initialContext).showSnackBar(
+                                const SnackBar(
+                                    content: Text("Anda telah berhasil keluar (Logout)."),
+                                    backgroundColor: Colors.orange,
+                                    duration: Duration(seconds: 2),
+                                ),
+                            );
+                        }
+                    }
+                });
+              } else {
+                // Belum login -> Tampilkan halaman Login
+                Navigator.push(
+                  initialContext,
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(
+                      onClose: () {
+                        // 1. Tutup halaman LoginPage
+                        Navigator.pop(initialContext); 
+                        
+                        // 2. Perbarui status login
+                        _checkLoginStatus(); 
+                        
+                        // 3. Refresh CommentsSection setelah login sukses
+                        _commentsSectionKey.currentState?.loadComments(); 
+                        
+                        // 4. Tampilkan SnackBar (Dipastikan setelah pop)
+                        Future.delayed(Duration.zero, () {
+                            if (mounted) {
+                                ScaffoldMessenger.of(initialContext).showSnackBar(
+                                    const SnackBar(
+                                        content: Text("Login Berhasil! Status Komentar diperbarui."),
+                                        backgroundColor: Colors.green,
+                                        duration: Duration(seconds: 2),
+                                    ),
+                                );
+                            }
+                        });
+                      },
+                    ),
+                  ),
+                );
+              }
             },
-            tooltip: 'Profil Pengguna',
+            tooltip: _isLoggedIn ? 'Profil Pengguna' : 'Masuk (Login)',
           ),
           const SizedBox(width: 10),
         ],
-
+        
+        // AppBar semi-transparan
         backgroundColor: Colors.black.withOpacity(0.6),
-        elevation: 0, 
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
       ),
 
       body: Stack(
         children: [
-          // Background Image
+          // === 1. Background Image (tari-bali.jpg) ===
           Positioned.fill(
             child: Image.asset(
-              'assets/images/tari-bali.jpg', 
+              'assets/images/tari-bali.jpg', // BACKGROUND UTAMA
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Container(
                 color: Colors.black,
-                child: const Center(
-                    child: Text("Background Image Not Found",
-                        style: TextStyle(color: Colors.red))),
+                child: const Center(child: Text("Background Image Not Found", style: TextStyle(color: Colors.red))),
               ),
             ),
           ),
 
-          // Dark Overlay for Contrast
+          // === 2. Dark Overlay for Contrast ===
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.75), 
+              color: Colors.black.withOpacity(0.7), // Overlay gelap
             ),
           ),
 
-          // Main Content (SingleChildScrollView)
+          // === 3. Main Content (SingleChildScrollView) ===
           SingleChildScrollView(
             padding: EdgeInsets.only(top: topPadding),
             child: Center(
@@ -599,22 +493,19 @@ class _BaliPageState extends State<BaliPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // HERO IMAGE (Bali)
+                    // === HERO IMAGE (Bali) ===
                     Stack(
                       alignment: Alignment.bottomLeft,
                       children: [
                         Image.asset(
-                          'assets/images/balidulu.jpg', 
+                          'assets/images/balidulu.jpg', // Asumsi path gambar hero Bali
                           width: double.infinity,
                           height: isMobile ? 220 : 350, 
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
+                          errorBuilder: (context, error, stackTrace) => Container(
                             height: isMobile ? 220 : 350,
                             color: Colors.grey.shade800,
-                            child: const Center(
-                                child: Text("Hero Image Not Found",
-                                    style: TextStyle(color: Colors.red))),
+                            child: const Center(child: Text("Hero Image Not Found", style: TextStyle(color: Colors.red))),
                           ),
                         ),
                         Container(
@@ -632,121 +523,108 @@ class _BaliPageState extends State<BaliPage> {
                           ),
                         ),
                         Padding(
-                          padding: EdgeInsets.only(
-                              left: horizontalPadding, bottom: 20),
-                          child: const Text(
-                            'B A L I',
-                            style: TextStyle(
-                              fontFamily: 'Nusantara',
-                              fontSize: 36,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
-                              letterSpacing: 2,
-                            ),
+                          padding: EdgeInsets.only(left: horizontalPadding, bottom: 20),
+                          child: const Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text( 
+                                'B A L I',
+                                style: TextStyle(
+                                  fontFamily: 'Nusantara',
+                                  fontSize: 36,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                              // Dihilangkan: SizedBox(height: 5) dan Text deskripsi: 'Pulau Dewata, pusat kebudayaan Hindu'
+                            ],
                           ),
                         ),
                       ],
                     ),
 
-                    // Konten Teks di bawah gambar
+                    // === Konten Teks di bawah gambar ===
                     Padding(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPadding, vertical: 30),
+                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 30),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // --- Bagian Geologi ---
-                          _buildContentSection(
-                            title: "Subduksi Tektonik dan Pengangkatan Lempeng",
-                            content: part1Awal,
-                            isMobile: isMobile,
-                          ),
-                          _buildContentSection(
-                            title: "Kemunculan Fenomena Vulkanik (Gunung Berapi)",
-                            content: part2Vulkanik,
-                            isMobile: isMobile,
-                          ),
-                          _buildContentSection(
-                            title: "Dampak Aktivitas Vulkanik dan Kesuburan Tanah", 
-                            content: part3DampakVulkanik,
-                            isMobile: isMobile,
-                          ),
-                          _buildContentSection(
-                            title: "Posisi di Paparan Sunda dan Garis Wallace", 
-                            content: part4PaparanSunda,
-                            isMobile: isMobile,
-                          ),
-
-                          const Divider(color: Colors.white24, height: 40),
-
-                          // --- Bagian Prasejarah ---
-                          _buildContentSection(
-                            title: "Masa Paleolitik dan Mesolitik", 
-                            content: part5Paleolitik,
-                            isMobile: isMobile,
-                          ),
                           
-                          const Divider(color: Colors.white24, height: 40),
-
-                          // --- Bagian Penjajahan Belanda (dengan Gambar) ---
-                          _buildContentSection(
-                            title: "Masa Penjajahan Belanda", 
-                            content: part6PenjajahanAwal, 
-                            isMobile: isMobile,
-                          ),
+                          // =======================================================
+                          // Konten Geologi & Prasejarah
+                          // =======================================================
                           
-                          // Gambar di tengah bagian "Masa Penjajahan Belanda"
-                          Container(
-                            margin: const EdgeInsets.symmetric(vertical: 20),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(10), 
+                          _buildContentSection(
+                            title: "Geologi, Fenomena Vulkanik, dan Paparan Sunda", 
+                            content: "$part1Awal\n\n$part2Vulkanik\n\n$part3DampakVulkanik\n\n$part4PaparanSunda", 
+                            isMobile: isMobile, 
+                            accentColor: BaliPage.accentColor
+                          ),
+                          const Divider(color: Colors.white24, height: 40),
+                          
+                          _buildContentSection(
+                            title: "Masa Prasejarah (Paleolitik hingga Homo Sapiens)", 
+                            content: part5Paleolitik, 
+                            isMobile: isMobile, 
+                            accentColor: BaliPage.accentColor
+                          ),
+                          const Divider(color: Colors.white24, height: 40),
+                          
+                          // --- SISIPAN GAMBAR DI TENGAH KONTEN (pura.jpg) ---
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 20.0),
                               child: Image.asset(
-                                'assets/images/bali2.jpg', 
-                                width: double.infinity,
-                                height: isMobile ? 200 : 300, 
-                                fit: BoxFit.cover,
-                                alignment: Alignment.center,
+                                'assets/images/bali2.jpg', // GAMBAR SISIPAN
+                                fit: BoxFit.contain,
+                                width: isMobile ? screenSize.width * 0.9 : 600, // Lebar responsif
                                 errorBuilder: (context, error, stackTrace) => Container(
-                                  height: isMobile ? 200 : 300,
+                                  height: 200,
                                   color: Colors.grey.shade800,
-                                  child: const Center(child: Text("Image Not Found", style: TextStyle(color: Colors.red))),
+                                  child: const Center(child: Text("Image pura.jpg Not Found", style: TextStyle(color: Colors.red))),
                                 ),
                               ),
                             ),
                           ),
+                          const SizedBox(height: 20), // Spasi setelah gambar
+
+                          // =======================================================
+                          // Konten Era Kolonial dan Pergerakan
+                          // =======================================================
+
+                          _buildContentSection(
+                            title: "Masa Penjajahan Belanda dan Struktur Pemerintahan", 
+                            content: "$part6PenjajahanAwal\n$part6PenjajahanAkhir", 
+                            isMobile: isMobile, 
+                            accentColor: BaliPage.accentColor
+                          ),
+                          const Divider(color: Colors.white24, height: 40),
                           
                           _buildContentSection(
-                            title: "", 
-                            content: part6PenjajahanAkhir, 
-                            isMobile: isMobile,
+                            title: "Organisasi Pergerakan Nasional Awal", 
+                            content: part7Organisasi, 
+                            isMobile: isMobile, 
+                            accentColor: BaliPage.accentColor
                           ),
-
                           const Divider(color: Colors.white24, height: 40),
-
-                          // --- Bagian Pergerakan ---
+                          
                           _buildContentSection(
-                            title: "Lahirnya Organisasi Pergerakan",
-                            content: part7Organisasi,
-                            isMobile: isMobile,
+                            title: "Proklamasi Kemerdekaan dan Perjuangan Ngurah Rai", 
+                            content: part8Kemerdekaan, 
+                            isMobile: isMobile, 
+                            accentColor: BaliPage.accentColor
                           ),
-
+                          
+                          // =======================================================
+                          
                           const Divider(color: Colors.white24, height: 40),
-
-                          // --- Bagian Kemerdekaan ---
-                          _buildContentSection(
-                            title: "Masa Kemerdekaan",
-                            content: part8Kemerdekaan,
-                            isMobile: isMobile,
-                          ),
-
-                          const Divider(color: Colors.white24, height: 40),
-
-                          // --- Tombol Merchandise Panggilan Cepat (DITAMBAHKAN) ---
+                          
+                          // --- Tombol Merchandise Panggilan Cepat ---
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton.icon(
                               onPressed: () {
-                                // Menggunakan 'push' agar tombol back kembali ke halaman ini
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -765,7 +643,7 @@ class _BaliPageState extends State<BaliPage> {
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.amber,
+                                backgroundColor: BaliPage.accentColor, // Warna aksen amber
                                 padding: const EdgeInsets.symmetric(vertical: 15),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -775,9 +653,14 @@ class _BaliPageState extends State<BaliPage> {
                           ),
                           const SizedBox(height: 40),
                           // --- Akhir Tombol Merchandise Panggilan Cepat ---
-                          
-                          // Kolom Komentar
-                          _buildCommentSection(isMobile: isMobile),
+
+                          // ===================== BAGIAN KOMENTAR (MODULAR BARU) =====================
+                          CommentsSection(
+                            key: _commentsSectionKey, // Inject GlobalKey
+                            isMobile: isMobile,
+                            horizontalPadding: 0, 
+                            contentId: 'bali', // ID unik untuk konten ini
+                          ),
 
                           const SizedBox(height: 50),
                         ],
