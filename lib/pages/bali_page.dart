@@ -180,7 +180,7 @@ class _BaliPageState extends State<BaliPage> {
                 children: [
                   Positioned.fill(
                     child: Image.asset(
-                      'assets/images/bali.jpg', // Asumsi path gambar Bali
+                      'assets/images/balidulu.jpg', // Asumsi path gambar Bali
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         color: Colors.grey.shade800,

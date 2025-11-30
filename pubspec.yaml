@@ -33,6 +33,10 @@ dependencies:
   http: ^1.6.0
   shared_preferences: ^2.5.3
   intl: ^0.20.2
+  image_picker: ^1.2.1
+  path: ^1.9.1
+  http_parser: ^4.1.2
+  universal_html: ^2.3.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -88,6 +92,10 @@ flutter:
       - assets/images/bragaOLD.jpg
       - assets/images/patungcaturmukaNOW.jpg
       - assets/images/patungcaturmukaOLD.jpg
+      - assets/images/sukarno.jpeg
+      - assets/images/gusdur.webp
+      - assets/images/bung-hatta.jpg
+      - assets/images/bj_habibie.jpg
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

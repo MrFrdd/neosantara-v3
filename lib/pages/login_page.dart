@@ -1,3 +1,5 @@
+// lib/pages/login_page.dart
+
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,10 +8,11 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart'; 
 
 class LoginPage extends StatefulWidget {
-  final VoidCallback onClose;
+  // FIX: Dibuat opsional (?) agar dapat dipanggil sebagai rute
+  final VoidCallback? onClose; 
 
-  // FIX ERROR: Menghapus duplikasi 'required'
-  const LoginPage({super.key, required this.onClose});
+  // FIX: Menghapus 'required' dari konstruktor
+  const LoginPage({super.key, this.onClose});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -108,7 +111,7 @@ class _LoginPageState extends State<LoginPage> {
         body: data,
       );
 
-      if (!mounted) return; // Pengecekan mounted setelah await
+      if (!mounted) return;
 
       // --- (3) Penanganan Respons API ---
       if (response.statusCode == 200) {
@@ -120,13 +123,13 @@ class _LoginPageState extends State<LoginPage> {
           
           if (responseData['data'] != null) {
               final userData = responseData['data'];
-              // Simpan data user ke SharedPreferences (KRITIS UNTUK KOMENTAR)
+              // Simpan data user
               prefs.setString('user_id', userData['id_user'].toString()); 
               prefs.setString('user_name', userData['nama_lengkap']); 
               prefs.setString('user_email', userData['email']); 
               prefs.setString('user_phone', userData['no_telepon'] ?? ''); 
               prefs.setString('user_address', userData['alamat'] ?? '');
-              prefs.setBool('is_logged_in', true); 
+              prefs.setBool('is_logged_in', true); // SET STATUS LOGIN
           }
           
           ScaffoldMessenger.of(context).showSnackBar(
@@ -137,7 +140,8 @@ class _LoginPageState extends State<LoginPage> {
             ),
           );
 
-          widget.onClose(); 
+          // Panggil onClose (opsional, menggunakan null-safe call)
+          widget.onClose?.call(); 
           
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -241,7 +245,8 @@ class _LoginPageState extends State<LoginPage> {
 
     final Map<ShortcutActivator, VoidCallback> shortcuts = {
       const SingleActivator(LogicalKeyboardKey.enter): _isLoading ? () {} : _handleSubmit, 
-      const SingleActivator(LogicalKeyboardKey.escape): widget.onClose,
+      // Null-check untuk onClose
+      const SingleActivator(LogicalKeyboardKey.escape): widget.onClose ?? () {},
     };
 
     return Stack(

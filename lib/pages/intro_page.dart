@@ -306,7 +306,7 @@ class _IntroPageState extends State<IntroPage> {
             : MainAxisAlignment.center,
         children: [
           Text(
-            'Keanekaragaman Budaya Indonesia',
+            'Keanekaragaman & Sejarah Indonesia',
             style: TextStyle(
               fontFamily: 'Nusantara',
               color: Colors.amber,
@@ -325,27 +325,13 @@ class _IntroPageState extends State<IntroPage> {
           ),
           const SizedBox(height: 14),
           Text(
-            'Indonesia adalah negeri kepulauan yang kaya akan keanekaragaman budaya. '
-            'Dari Sabang hingga Merauke, setiap daerah memiliki warisan unik berupa bahasa, kesenian, tradisi, pakaian adat, hingga nilai-nilai kearifan lokal yang menjadi jati diri bangsa.',
+            'Indonesia adalah negeri yang lahir dari perpaduan ribuan budaya, bahasa, dan tradisi yang membentang dari Sabang hingga Merauke. Setiap daerah memiliki cerita unik, setiap suku membawa warna, dan setiap peninggalan sejarah menjadi penanda perjalanan panjang bangsa ini. Keanekaragaman bukan hanya identitas, tetapi kekuatan yang menyatukan kita di tengah perbedaan. Melalui pemahaman sejarah dan kekayaan budaya inilah, kita dapat melihat bagaimana Indonesia tumbuh, berjuang, dan berkembang menjadi bangsa yang kokoh dan penuh karakter. Mari mengenal lebih dekat warisan Nusantara yang patut kita banggakan dan lestarikan bersama.',
             textAlign: TextAlign.justify,
             softWrap: true,
             style: TextStyle(
               fontFamily: 'Nusantara',
               color: Colors.white,
               fontSize: isMobile ? 17 : 17,
-              height: 1.6,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            'Budaya Nusantara tidak hanya menjadi peninggalan masa lalu, tetapi juga sumber inspirasi yang terus hidup dan berkembang seiring waktu. '
-            'Di tengah arus modernisasi, budaya Indonesia hadir sebagai pengingat akan pentingnya menjaga identitas dan melestarikan tradisi bagi generasi masa depan.',
-            textAlign: TextAlign.justify,
-            softWrap: true,
-            style: TextStyle(
-              fontFamily: 'Nusantara',
-              color: Colors.white,
-              fontSize: isMobile ? 17 : 18,
               height: 1.6,
             ),
           ),
@@ -358,17 +344,17 @@ class _IntroPageState extends State<IntroPage> {
   Widget _sloganCards(bool isMobile) {
     final List<Map<String, dynamic>> slogans = [
       {
-        'text': 'Ayo kenali dan lestarikan budaya Indonesia bersama kami!',
+        'text': 'Jelajahi Keanekaragaman Nusantara',
         'icon': Icons.favorite,
         'color': Colors.orangeAccent,
       },
       {
-        'text': 'Belajar budaya, cintai Indonesia!',
+        'text': 'Kenali Jejak Sejarah Bangsa',
         'icon': Icons.school,
         'color': Colors.amber,
       },
       {
-        'text': 'Mulai perjalananmu menjelajahi budaya Nusantara!',
+        'text': 'Lestarikan Warisan Indonesia',
         'icon': Icons.explore,
         'color': Colors.deepOrangeAccent,
       },
@@ -727,14 +713,353 @@ class _IntroPageState extends State<IntroPage> {
             data: caturMukaData,
             isMobile: isMobile,
           ),
-
         ],
       ),
     );
   }
   // === AKHIR Tempoe Doeloe Section ===
+  
+  // === FUNGSI BARU: Pandangan Tokoh Indonesia Section ===
+  Widget _buildTokohSection(bool isMobile) {
+    final double horizontalPadding = isMobile ? 18 : 40;
 
-  // === Footer Section (Tentang Pembuat) ===
+    // ------------------------------------
+    // 1. WIDGET SOEKARNO
+    // ------------------------------------
+    Widget sukarnoImage = ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Image.asset(
+        'assets/images/sukarno.jpeg',
+        // KUNCI: Ukuran gambar Soekarno diperkecil
+        height: isMobile ? 120 : 150, 
+        width: isMobile ? double.infinity : 150, 
+        fit: BoxFit.cover, 
+      ),
+    );
+
+    Widget sukarnoText = Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.orange.withOpacity(0.4), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Soekarno',
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.amberAccent,
+            ),
+          ),
+          const SizedBox(height: 15),
+          Text(
+            '“Bangsa yang besar adalah bangsa yang menghargai jasa pahlawannya.” '
+            'Soekarno menekankan pentingnya sejarah sebagai fondasi jati diri bangsa. '
+            'Ia memandang keanekaragaman budaya sebagai kekuatan pemersatu untuk membangun negara merdeka.',
+            textAlign: TextAlign.justify,
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              color: Colors.white,
+              // KUNCI PERUBAHAN: Ukuran font konten diperkecil
+              fontSize: isMobile ? 15 : 16, 
+              height: 1.6,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // ------------------------------------
+    // 2. WIDGET MOHAMMAD HATTA 
+    // ------------------------------------
+    Widget hattaImage = ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Image.asset(
+        'assets/images/bung-hatta.jpg', // Path untuk Mohammad Hatta
+        // KUNCI: Ukuran gambar Mohammad Hatta diperkecil
+        height: isMobile ? 120 : 150, 
+        width: isMobile ? double.infinity : 150, 
+        fit: BoxFit.cover, 
+      ),
+    );
+
+    Widget hattaText = Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.orange.withOpacity(0.4), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Mohammad Hatta',
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.amberAccent,
+            ),
+          ),
+          const SizedBox(height: 15),
+          Text(
+            '“Indonesia tidak akan bersatu jika tidak ada toleransi.” Hatta melihat keragaman suku, budaya, dan agama sebagai modal sosial. Menurutnya, sejarah perjuangan bersama merupakan pengikat soliditas bangsa.',
+            textAlign: TextAlign.justify,
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              color: Colors.white,
+              // KUNCI PERUBAHAN: Ukuran font konten diperkecil
+              fontSize: isMobile ? 15 : 16, 
+              height: 1.6,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+    // ------------------------------------
+
+    // KUNCI PERUBAHAN: Menambahkan widget untuk Gus Dur
+
+    // ------------------------------------
+    // 3. WIDGET GUS DUR
+    // ------------------------------------
+    Widget gusdurImage = ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Image.asset(
+        'assets/images/gusdur.webp', // Path untuk Gus Dur
+        height: isMobile ? 120 : 150, 
+        width: isMobile ? double.infinity : 150, 
+        fit: BoxFit.cover, 
+      ),
+    );
+
+    Widget gusdurText = Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.orange.withOpacity(0.4), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Gus Dur (Abdurrahman Wahid)',
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.amberAccent,
+            ),
+          ),
+          const SizedBox(height: 15),
+          Text(
+            '“Indonesia ada karena perbedaan.” '
+            'Gus Dur menegaskan pentingnya menghargai perbedaan agama, etnis, dan budaya. Menurutnya, sejarah Indonesia dibangun dari toleransi dan keberagaman yang dijunjung tinggi.',
+            textAlign: TextAlign.justify,
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              color: Colors.white,
+              // KUNCI PERUBAHAN: Ukuran font konten diperkecil
+              fontSize: isMobile ? 15 : 16, 
+              height: 1.6,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+    // ------------------------------------
+
+    // KUNCI PERUBAHAN: Menambahkan widget untuk B.J. Habibie (4. WIDGET B.J. HABIBIE)
+    // ------------------------------------
+    // 4. WIDGET B.J. HABIBIE
+    // ------------------------------------
+    Widget habibieImage = ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Image.asset(
+        'assets/images/bj_habibie.jpg', // Path untuk B.J. Habibie
+        height: isMobile ? 120 : 150, 
+        width: isMobile ? double.infinity : 150, 
+        fit: BoxFit.cover, 
+      ),
+    );
+
+    Widget habibieText = Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.55),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.orange.withOpacity(0.4), width: 1.2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'B.J. Habibie',
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.amberAccent,
+            ),
+          ),
+          const SizedBox(height: 15),
+          Text(
+            '“Keanekaragaman bukan untuk dipertentankan, tetapi untuk saling melengkapi.” '
+            'Habibie memandang Indonesia sebagai bangsa multikultural yang harus maju dengan inovasi tanpa meninggalkan akar sejarah dan budaya.',
+            textAlign: TextAlign.justify,
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              color: Colors.white,
+              // KUNCI PERUBAHAN: Ukuran font konten diperkecil
+              fontSize: isMobile ? 15 : 16, 
+              height: 1.6,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+    // ------------------------------------
+
+
+    return Container(
+      width: double.infinity,
+      color: Colors.black.withOpacity(0.45), // Consistent dark overlay
+      padding: EdgeInsets.symmetric(vertical: 40, horizontal: horizontalPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '🌟 Pandangan Para Tokoh Indonesia tentang Keanekaragaman & Sejarah Indonesia',
+            style: TextStyle(
+              fontFamily: 'Nusantara',
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.orange,
+            ),
+          ),
+          const SizedBox(height: 30),
+
+          // --- SOEKARNO SECTION ---
+          isMobile
+              ? Column( // Mobile: Gambar di atas, Teks di bawah
+                  children: [
+                    sukarnoImage,
+                    const SizedBox(height: 20),
+                    sukarnoText,
+                  ],
+                )
+              : Row( // Desktop: Gambar dan Teks Berdampingan
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Gambar Soekarno (Lebar 150px)
+                    sukarnoImage, 
+                    const SizedBox(width: 40),
+                    // Teks (Mengambil sisa ruang dengan Expanded)
+                    Expanded(
+                      child: sukarnoText,
+                    ),
+                  ],
+                ),
+
+          // --- SEPARATOR (ANTARA SOEKARNO DAN HATTA) ---
+          const SizedBox(height: 40), 
+          const Divider(color: Colors.white30, thickness: 1.0, indent: 20, endIndent: 20),
+          const SizedBox(height: 40), 
+
+          // --- MOHAMMAD HATTA SECTION ---
+          isMobile
+              ? Column( // Mobile: Gambar di atas, Teks di bawah
+                  children: [
+                    hattaImage,
+                    const SizedBox(height: 20),
+                    hattaText,
+                  ],
+                )
+              : Row( // Desktop: Gambar dan Teks Berdampingan
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Gambar Hatta (Lebar 150px)
+                    hattaImage, 
+                    const SizedBox(width: 40),
+                    // Teks (Mengambil sisa ruang dengan Expanded)
+                    Expanded(
+                      child: hattaText,
+                    ),
+                  ],
+                ),
+          
+          // KUNCI PERUBAHAN: Menambahkan Separator BARU (Setelah Hatta)
+          const SizedBox(height: 40), 
+          const Divider(color: Colors.white30, thickness: 1.0, indent: 20, endIndent: 20),
+          const SizedBox(height: 40), 
+
+          // --- GUS DUR SECTION (BARU) ---
+          isMobile
+              ? Column( // Mobile: Gambar di atas, Teks di bawah
+                  children: [
+                    gusdurImage,
+                    const SizedBox(height: 20),
+                    gusdurText,
+                  ],
+                )
+              : Row( // Desktop: Gambar dan Teks Berdampingan
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Gambar Gus Dur (Lebar 150px)
+                    gusdurImage, 
+                    const SizedBox(width: 40),
+                    // Teks (Mengambil sisa ruang dengan Expanded)
+                    Expanded(
+                      child: gusdurText,
+                    ),
+                  ],
+                ),
+                
+          // KUNCI PERUBAHAN: Menambahkan Separator BARU (Setelah Gus Dur)
+          const SizedBox(height: 40), 
+          const Divider(color: Colors.white30, thickness: 1.0, indent: 20, endIndent: 20),
+          const SizedBox(height: 40), 
+
+          // --- B.J. HABIBIE SECTION (BARU) ---
+          isMobile
+              ? Column( // Mobile: Gambar di atas, Teks di bawah
+                  children: [
+                    habibieImage,
+                    const SizedBox(height: 20),
+                    habibieText,
+                  ],
+                )
+              : Row( // Desktop: Gambar dan Teks Berdampingan
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Gambar B.J. Habibie (Lebar 150px)
+                    habibieImage, 
+                    const SizedBox(width: 40),
+                    // Teks (Mengambil sisa ruang dengan Expanded)
+                    Expanded(
+                      child: habibieText,
+                    ),
+                  ],
+                ),
+        ],
+      ),
+    );
+  }
+  // === AKHIR Pandangan Tokoh Indonesia Section ===
+
+
+  // === Footer Section (Tentang Pembuat) - TELAH DIMODIFIKASI (Revert ke Black Transparent) ===
   Widget _footerSection(bool isMobile) {
     final double horizontalPadding = 16;
     // Tentukan lebar maksimum untuk background card
@@ -746,50 +1071,60 @@ class _IntroPageState extends State<IntroPage> {
       crossAxisAlignment: isMobile ? CrossAxisAlignment.center : CrossAxisAlignment.start, 
       children: [
         // Spasi vertikal kembali ke 40px (mempertahankan posisi teks)
-        if (!isMobile) const SizedBox(height: 47), 
+        if (!isMobile) const SizedBox(height: 10), 
+        // KUNCI PERUBAHAN: Mengganti Judul dan Menambahkan Sapaan
         Text(
-          'Tentang Pembuat',
+          'Salam dari Kami, Tim Pengembang! 👋',
           style: TextStyle(
             fontFamily: 'Nusantara',
-            fontSize: isMobile ? 14 : 14,
+            fontSize: isMobile ? 16 : 18,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFFFFD700),
+            // START MODIFIKASI WARNA TEKS UNTUK BACKGROUND HITAM (REVERT)
+            color: Colors.amber, // Sebelumnya: Colors.orange
+            // END MODIFIKASI WARNA TEKS
           ),
         ),
+        const SizedBox(height: 8),
+        // KUNCI PERUBAHAN: Menambahkan Harapan/Pesan
+        Text(
+          'Kami berharap aplikasi ini dapat menjadi jendela bagi Anda untuk menjelajahi kekayaan budaya dan sejarah Indonesia. Mari kita jaga dan lestarikan warisan Nusantara bersama-sama. Terima kasih atas dukungan Anda!',
+          textAlign: TextAlign.justify,
+          style: TextStyle(
+            fontFamily: 'Nusantara',
+            // START MODIFIKASI WARNA TEKS UNTUK BACKGROUND HITAM (REVERT)
+            color: Colors.white, // Sebelumnya: Colors.black87
+            // END MODIFIKASI WARNA TEKS
+            fontSize: isMobile ? 13 : 14,
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 12),
+        // START MODIFIKASI WARNA DIVIDER UNTUK BACKGROUND HITAM (REVERT)
+        const Divider(color: Colors.white24, thickness: 0.5), // Sebelumnya: Colors.black12
+        // END MODIFIKASI WARNA DIVIDER
         const SizedBox(height: 6),
+        
+        // --- INFORMASI PEMBUAT (Dipertahankan di bawah pesan) ---
         Text(
-          'Dibuat oleh: Muhammad Frida & Arfana Ridho',
+          'Proyek ini Dibuat oleh:',
           style: TextStyle(
             fontFamily: 'Nusantara',
-            color: Colors.white,
-            fontSize: isMobile ? 13 : 12,
+            fontSize: isMobile ? 12 : 12,
+            fontWeight: FontWeight.bold,
+            // START MODIFIKASI WARNA TEKS UNTUK BACKGROUND HITAM (REVERT)
+            color: Colors.white70, // Sebelumnya: Colors.black54
+            // END MODIFIKASI WARNA TEKS
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          'NIM: 241011401999 & 241011401690',
+          'Muhammad Frida (241011401999) & Arfana Ridho (241011401690)',
           style: TextStyle(
             fontFamily: 'Nusantara',
-            color: Colors.white70,
-            fontSize: isMobile ? 12 : 12,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'KELAS: 03TPLP033',
-          style: TextStyle(
-            fontFamily: 'Nusantara',
-            color: Colors.white54,
-            fontSize: isMobile ? 12 : 12,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'MATKUL: Algoritma & Pemrograman II',
-          style: TextStyle(
-            fontFamily: 'Nusantara',
-            color: Colors.white54,
-            fontSize: isMobile ? 12 : 12,
+            // START MODIFIKASI WARNA TEKS UNTUK BACKGROUND HITAM (REVERT)
+            color: Colors.white, // Sebelumnya: Colors.black
+            // END MODIFIKASI WARNA TEKS
+            fontSize: isMobile ? 13 : 13,
           ),
         ),
       ],
@@ -827,7 +1162,6 @@ class _IntroPageState extends State<IntroPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // SizedBox(height: topSpacing), // Dihapus untuk menghemat ruang vertikal
 
           Divider(
             color: isMobile ? Colors.white70 : Colors.white54,
@@ -842,24 +1176,24 @@ class _IntroPageState extends State<IntroPage> {
             // KUNCI PERUBAHAN: Padding vertikal diperkecil dari 4 menjadi 2
             padding: const EdgeInsets.symmetric(vertical: 1, horizontal: 8),
             decoration: BoxDecoration(
-              // Background card info tetap gelap agar kontras
-              color: Colors.black.withOpacity(0.55),
+              // START PERUBAHAN UTAMA: BACKGROUND MENJADI HITAM TRANSPARAN (REVERT)
+              color: Colors.black.withOpacity(0.55), // Sebelumnya: Colors.white
+              // END PERUBAHAN UTAMA
               borderRadius: BorderRadius.circular(14),
               // Menghilangkan border
               border: null, 
             ),
             
+            // KUNCI PERBAIKAN OVERFLOW: IntrinsicHeight Dihapus
             child: !isMobile
-              ? IntrinsicHeight( // WEB VIEW
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    // crossAxisAlignment.start agar gambar dan teks sejajar rata atas
-                    crossAxisAlignment: CrossAxisAlignment.start, 
-                    children: [
-                      creatorImage, // Gambar di Kiri
-                      Expanded(child: creatorInfo), // Teks Info
-                    ],
-                  ),
+              ? Row( // WEB VIEW
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  // crossAxisAlignment.start agar gambar dan teks sejajar rata atas
+                  crossAxisAlignment: CrossAxisAlignment.start, 
+                  children: [
+                    creatorImage, // Gambar di Kiri
+                    Expanded(child: creatorInfo), // Teks Info
+                  ],
                 )
               : Column( // MOBILE VIEW (tetap rata tengah karena tampilan stack vertikal)
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -888,6 +1222,7 @@ class _IntroPageState extends State<IntroPage> {
       ),
     );
   }
+  // === AKHIR Footer Section ===
 
   @override
   Widget build(BuildContext context) {
@@ -1103,7 +1438,7 @@ class _IntroPageState extends State<IntroPage> {
                     text: "Merchandise",
                     onPressed: _navigateToMerchandise,
                   ),
-                  const SizedBox(width: 8),
+                    const SizedBox(width: 8),
 
                   // 3. Sejarah Dropdown
                   SejarahDropdown(
@@ -1261,9 +1596,15 @@ class _IntroPageState extends State<IntroPage> {
                 // === BAGIAN: TEMPOE DOELOE ===
                 _buildTempoeDoeloeSection(isMobile),
                 // =================================
+                
+                // KUNCI: PENEMPATAN BAGIAN TOKOH INDONESIA
+                // === BAGIAN: PANDANGAN TOKOH INDONESIA ===
+                _buildTokohSection(isMobile),
+                // ========================================\
 
                 // FOOTER UNTUK WEB BROWSER
                 if (!isMobile) _footerSection(isMobile),
+                
               ],
             ),
           ),
